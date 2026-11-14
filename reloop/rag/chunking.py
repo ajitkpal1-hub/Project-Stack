@@ -17,6 +17,7 @@ MIN_CHUNK_CHARS = 80
 
 _MD_HEADING = re.compile(r"^#{1,6}\s+(.+)$")
 _PLAIN_HEADING = re.compile(r"^(?:[A-Z0-9][A-Z0-9 ,.\-()/&]{6,80}|\d+(?:\.\d+)*\.?\s+[A-Z][^.]{3,80})$")
+_LINE_JOIN = re.compile(r"\n(?!\s*(?:\([a-zA-Z0-9]{1,4}\)|[•\-–]|\d{1,2}[.)])\s)")
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?;:])\s+(?=[A-Z0-9(\"'])")
 
 
@@ -60,11 +61,9 @@ def _blocks(text: str) -> list[tuple[str, str]]:
         elif len(lines) == 1 and len(raw) <= 90 and _PLAIN_HEADING.match(raw):
             out.append(("heading", raw))
             continue
-        # PDFs often lack blank lines: break very long blocks on line breaks.
-        if len(raw) > TARGET_CHARS * 2:
-            out.extend(("para", s.strip()) for s in raw.split("\n") if s.strip())
-        else:
-            out.append(("para", " ".join(raw.split("\n")) if raw.count("\n") > 3 else raw))
+        # PDFs break lines mid-sentence: re-join them, but keep list items on their own lines.
+        joined = _LINE_JOIN.sub(" ", raw)
+        out.append(("para", re.sub(r" {2,}", " ", joined).strip()))
     return out
 
 
