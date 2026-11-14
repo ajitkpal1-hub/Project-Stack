@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RELOOP AI</title>
+  <meta name="description" content="RELOOP AI: sort smart, reuse more, waste less.">
+  <link rel="stylesheet" href="/css/poc.css">
+</head>
+<body>
+  <main class="poc">
+    <h1>RELOOP AI</h1>
+    <p class="tagline">Sort Smart. Reuse More. Waste Less.</p>
+    <p>This is the Phase 1 proof of concept. It shows that a Python server-rendered app runs here. The full interface arrives in Phase 2.</p>
+
+    <h2>Integrations</h2>
+    <ul class="status">
+      {% for name, ready in integrations.items() %}
+      <li><span>{{ name | capitalize }}</span><span class="{{ 'on' if ready else 'off' }}">{{ 'Configured' if ready else 'Not configured yet' }}</span></li>
+      {% endfor %}
+    </ul>
+    <p><a href="/api/health">View health check (JSON)</a></p>
+  </main>
+</body>
+</html>
