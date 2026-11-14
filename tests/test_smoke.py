@@ -39,7 +39,7 @@ def test_every_page_renders_with_nav(client, page):
     response = client.get(page.path)
     assert response.status_code == 200
     assert page.title in response.text
-    if page.slug != "scan":  # the scanner is live from Phase 3
+    if page.slug not in {"scan", "assistant"}:  # live since Phases 3 and 4
         assert f"Arrives in Phase {page.phase}" in response.text
     for nav_page in PAGES:
         assert f'href="{nav_page.path}"' in response.text

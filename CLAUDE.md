@@ -83,7 +83,7 @@ uv pip install --python .venv -r requirements-dev.txt
 - [ ] Set `APP_ENV=production` in Vercel env vars (currently reports "development")
 - [x] Phase 2: interface and navigation. "Municipal Bin Stencils" visual world (see DESIGN.md, PRODUCT.md, `.impeccable/surfaces/`), full homepage, shared shell, 7 honest "Arrives in Phase N" pages, 21 tests passing, finish review: ship (2026-11-15)
 - [x] Phase 3: AI waste classification. Claude vision via `reloop/services/classifier.py` (structured outputs, server-side refusal fallback), Python guardrails in `reloop/services/guardrails.py`, condition check before any donation advice, mock classifier for tests/demo. 56 tests passing (2026-11-15). Waiting on the user's Anthropic API key for a live test.
-- [ ] Phase 4: RAG knowledge assistant
+- [x] Phase 4: RAG knowledge assistant. `reloop/rag/` (chunking, Voyage embeddings, Supabase pgvector store, Claude answers with citations), `scripts/ingest.py`, `supabase/migrations/0001_knowledge_base.sql`, 87 tests passing (2026-11-15). Waiting on Supabase, a Voyage key and official documents; the live assistant honestly reports an empty knowledge base until then.
 - [ ] Phase 5: multi-agent workflow
 - [ ] Phase 6: donations + accounts (Supabase)
 - [ ] Phase 7: location search + verified partners

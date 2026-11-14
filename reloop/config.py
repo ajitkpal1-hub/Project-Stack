@@ -16,8 +16,11 @@ class Settings(BaseSettings):
     llm_provider: str = ""
     llm_api_key: str = ""
     llm_model: str = ""
-    embedding_provider: str = ""
-    embedding_model: str = ""
+    embedding_provider: str = ""  # "voyage" | "hash" (tests/dev only) | empty
+    embedding_api_key: str = ""
+    embedding_model: str = ""  # defaults to voyage-4
+    rag_top_k: int = 6
+    rag_min_similarity: float = 0.35  # below this a passage is not treated as relevant
     maps_api_key: str = ""
 
     @property
@@ -38,9 +41,9 @@ class Settings(BaseSettings):
     def integration_status(self) -> dict[str, bool]:
         """Which integrations have credentials set. Reports booleans only, never values."""
         return {
-            "supabase": bool(self.supabase_url and self.supabase_anon_key),
+            "supabase": bool(self.supabase_url.strip() and self.supabase_service_role_key.strip()),
             "llm": self.llm_mode == "mock" or bool(self.llm_mode == "anthropic" and self.llm_api_key.strip()),
-            "embeddings": bool(self.embedding_provider),
+            "embeddings": bool(self.embedding_provider.strip() and (self.embedding_api_key.strip() or self.embedding_provider.strip().lower() == "hash")),
             "maps": bool(self.maps_api_key),
         }
 

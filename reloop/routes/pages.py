@@ -116,7 +116,7 @@ def _feature(request: Request, page: Page, **extra) -> HTMLResponse:
     )
 
 
-SELF_RENDERED = {"scan"}  # pages with their own route module
+SELF_RENDERED = {"scan", "assistant"}  # pages with their own route module
 
 
 def _register(page: Page) -> None:

@@ -1,0 +1,10 @@
+# One [[document]] entry per file in this folder. Fill these in from the document itself.
+# Never guess: leave a field out if the document doesn't state it.
+#
+# [[document]]
+# file_name    = "example.pdf"                 # exact file name in knowledge/
+# title        = "Full title as printed"       # required
+# publisher    = "Who issued it"               # e.g. Ministry, CPCB, KDMC
+# source_url   = "https://..."                 # the official page you downloaded it from
+# published_on = "YYYY-MM-DD"                  # as printed on the document
+# jurisdiction = "India"                       # India / Maharashtra / KDMC
