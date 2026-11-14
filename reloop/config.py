@@ -20,11 +20,26 @@ class Settings(BaseSettings):
     embedding_model: str = ""
     maps_api_key: str = ""
 
+    @property
+    def llm_mode(self) -> str:
+        """LLM_PROVIDER normalised: tolerant of stray quotes, spaces and capitals."""
+        return self.llm_provider.strip().strip("\"'").strip().lower()
+
+    def llm_diagnostics(self) -> dict[str, object]:
+        """Safe to expose: never echoes an unrecognised value (it could be a misplaced key)."""
+        mode = self.llm_mode
+        known = {"anthropic", "mock"}
+        return {
+            "provider": mode if mode in known else ("unset" if not mode else f"unrecognised ({len(mode)} chars)"),
+            "api_key_present": bool(self.llm_api_key.strip()),
+            "model_override": bool(self.llm_model.strip()),
+        }
+
     def integration_status(self) -> dict[str, bool]:
         """Which integrations have credentials set. Reports booleans only, never values."""
         return {
             "supabase": bool(self.supabase_url and self.supabase_anon_key),
-            "llm": bool(self.llm_provider and self.llm_api_key),
+            "llm": self.llm_mode == "mock" or bool(self.llm_mode == "anthropic" and self.llm_api_key.strip()),
             "embeddings": bool(self.embedding_provider),
             "maps": bool(self.maps_api_key),
         }

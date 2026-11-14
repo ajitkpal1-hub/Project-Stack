@@ -287,3 +287,22 @@ def test_user_text_is_escaped(client):
     r = post_photo(client, "<img src=x onerror=alert(1)>.jpg", note="<script>alert(1)</script>")
     assert "<script>alert(1)</script>" not in r.text
     assert "<img src=x" not in r.text
+
+
+@pytest.mark.parametrize("raw", ["mock", " mock ", '"mock"', "'MOCK'"])
+def test_provider_setting_tolerates_quotes_and_spaces(raw):
+    assert isinstance(get_classifier(Settings(llm_provider=raw)), MockClassifier)
+
+
+def test_health_llm_diagnostics_never_echo_unknown_values(monkeypatch):
+    from reloop.config import get_settings
+
+    leaked = "sk-ant-pasted-in-the-wrong-field"
+    monkeypatch.setenv("LLM_PROVIDER", leaked)
+    get_settings.cache_clear()
+    try:
+        body = TestClient(create_app()).get("/api/health").text
+        assert leaked not in body
+        assert "unrecognised" in body
+    finally:
+        get_settings.cache_clear()

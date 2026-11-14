@@ -244,9 +244,9 @@ _MOCK_LIBRARY = [
 
 def get_classifier(settings: Settings) -> Classifier | None:
     """Return the configured classifier, or None when AI isn't configured."""
-    provider = settings.llm_provider.strip().lower()
+    provider = settings.llm_mode
     if provider == "mock":
         return MockClassifier()
     if provider == "anthropic" and settings.llm_api_key:
-        return ClaudeClassifier(api_key=settings.llm_api_key, model=settings.llm_model or None)
+        return ClaudeClassifier(api_key=settings.llm_api_key.strip(), model=settings.llm_model.strip() or None)
     return None

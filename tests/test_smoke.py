@@ -70,7 +70,7 @@ def test_health_reports_ok(client):
 
 def test_health_never_exposes_secret_values(monkeypatch):
     secret = "sk-test-should-never-appear"
-    monkeypatch.setenv("LLM_PROVIDER", "test")
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
     monkeypatch.setenv("LLM_API_KEY", secret)
     get_settings.cache_clear()
     try:

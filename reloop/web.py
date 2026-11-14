@@ -38,6 +38,7 @@ def create_app() -> FastAPI:
             "environment": settings.app_env,
             "on_vercel": bool(os.environ.get("VERCEL")),
             "integrations": settings.integration_status(),
+            "llm": settings.llm_diagnostics(),
         }
 
     # On Vercel, public/ is served by the CDN at the site root and must not be
