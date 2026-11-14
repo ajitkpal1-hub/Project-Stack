@@ -64,6 +64,12 @@ Agent pipeline: Input → Classification → Knowledge → Recommendation → Do
 - Set env vars in Vercel Project Settings. Confirm with the user before any push, repo creation or deploy.
 - Verify after deploy: `/api/health` returns `status: ok` and the expected integration flags.
 
+## Design rules
+- PRODUCT.md holds product truth. DESIGN.md holds the visual system (tokens, components). Follow both for any UI change.
+- Interface text goes through `_()` in templates (Jinja i18n, null translations for now) so Hindi and Marathi can be added later.
+- Lane colours are municipal bin colours, shared by the UI and `reloop/models/categories.py`.
+- Visual checks: `.venv/Scripts/python -m pip show playwright` (dev only). Screenshots use the installed Edge (`channel="msedge"`) at 390, 1000 and 1440 widths.
+
 ## Local development
 ```
 uv venv --python 3.12 .venv
@@ -73,8 +79,9 @@ uv pip install --python .venv -r requirements-dev.txt
 
 ## Current status
 - [x] Phase 1: architecture validated (FastAPI on Vercel), PoC app + health check, 4 tests passing locally
-- [ ] Phase 1: first Vercel deploy (waiting on GitHub repo + Vercel import)
-- [ ] Phase 2: interface and navigation
+- [x] Phase 1: deployed. Repo https://github.com/ajitkpal1-hub/Project-Stack, live https://project-stack-wheat.vercel.app (health verified 2026-11-15)
+- [ ] Set `APP_ENV=production` in Vercel env vars (currently reports "development")
+- [x] Phase 2: interface and navigation. "Municipal Bin Stencils" visual world (see DESIGN.md, PRODUCT.md, `.impeccable/surfaces/`), full homepage, shared shell, 7 honest "Arrives in Phase N" pages, 21 tests passing, finish review: ship (2026-11-15)
 - [ ] Phase 3: AI waste classification
 - [ ] Phase 4: RAG knowledge assistant
 - [ ] Phase 5: multi-agent workflow

@@ -1,0 +1,91 @@
+{% from "partials/icons.html" import icon, mark %}<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RELOOP AI{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ _('RELOOP AI helps households in India sort waste correctly, dispose of hazardous items safely, and donate usable things.') }}{% endblock %}">
+  <meta name="theme-color" content="#1f6b3a">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/big-shoulders-stencil-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/mukta-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/site.css?v={{ app_version }}">
+</head>
+<body>
+  <a class="skip" href="#main">{{ _('Skip to content') }}</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="/" aria-label="{{ _('RELOOP AI home') }}">
+        {{ mark(34) }}
+        <span class="wordmark">RELOOP<span class="wordmark-ai">AI</span></span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="{{ _('Main') }}">
+        <ul>
+          <li><a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>{{ _('Home') }}</a></li>
+          {% for p in primary_nav %}
+          <li><a href="{{ p.path }}" title="{{ _(p.title) }}" {% if active == p.slug %}aria-current="page"{% endif %}>{{ _(p.nav_label) }}</a></li>
+          {% endfor %}
+        </ul>
+        <div class="nav-account-group">
+          <a class="nav-admin" href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>{{ _('Admin') }}</a>
+          <a class="nav-account" href="/dashboard" {% if active == 'dashboard' %}aria-current="page"{% endif %}>{{ _('My dashboard') }}</a>
+        </div>
+      </nav>
+
+      <details class="nav-mobile">
+        <summary aria-label="{{ _('Menu') }}">
+          <span class="when-closed">{{ icon('menu', 22) }}</span><span class="when-open">{{ icon('close', 22) }}</span>
+          <span class="summary-label">{{ _('Menu') }}</span>
+        </summary>
+        <nav aria-label="{{ _('Main') }}">
+          <ul>
+            <li><a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>{{ _('Home') }}</a></li>
+            {% for p in primary_nav %}
+            <li><a href="{{ p.path }}" {% if active == p.slug %}aria-current="page"{% endif %}>{{ _(p.title) }}</a></li>
+            {% endfor %}
+            <li><a href="/dashboard" {% if active == 'dashboard' %}aria-current="page"{% endif %}>{{ _('My dashboard') }}</a></li>
+            <li><a href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>{{ _('Admin dashboard') }}</a></li>
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <main id="main">
+    {% block main %}{% endblock %}
+  </main>
+
+  <aside class="hazard-strip" aria-label="{{ _('Safety') }}">
+    <div class="wrap hazard-row">
+      <span class="hazard-icon">{{ icon('alert', 22) }}</span>
+      <p><strong>{{ _('Never in the regular bin:') }}</strong> {{ _('batteries, medicines, syringes, chemicals, paint, tube lights.') }} <a href="/#lane-hazardous">{{ _('How to handle hazardous items') }}</a></p>
+    </div>
+  </aside>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand brand-footer" href="/">{{ mark(30) }}<span class="wordmark">RELOOP<span class="wordmark-ai">AI</span></span></a>
+        <p class="footer-tagline">{{ _('Sort Smart. Reuse More. Waste Less.') }}</p>
+        <p>{{ _('Built for Project STACK. Piloting in Thakurli, Dombivli and Kalyan, Maharashtra.') }}</p>
+      </div>
+      <nav class="footer-nav" aria-label="{{ _('Footer') }}">
+        <h2>{{ _('Use RELOOP') }}</h2>
+        <ul>
+          {% for p in primary_nav %}<li><a href="{{ p.path }}">{{ _(p.title) }}</a></li>{% endfor %}
+        </ul>
+      </nav>
+      <nav class="footer-nav" aria-label="{{ _('Account') }}">
+        <h2>{{ _('Account') }}</h2>
+        <ul>
+          <li><a href="/dashboard">{{ _('My dashboard') }}</a></li>
+          <li><a href="/admin">{{ _('Admin') }}</a></li>
+        </ul>
+      </nav>
+      <p class="footer-note">{{ _('General guidance only. Always follow your local municipal collection instructions. RELOOP AI never asks for your phone number or address publicly.') }}</p>
+    </div>
+  </footer>
+</body>
+</html>

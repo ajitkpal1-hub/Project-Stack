@@ -4,7 +4,9 @@
 
 RELOOP AI helps Indian households segregate waste correctly, dispose of hazardous items safely, find recycling facilities and donate usable items to verified NGOs. The pilot covers Thakurli, Dombivli and Kalyan, Maharashtra.
 
-> **Status:** Phase 1 (proof of concept). See [CLAUDE.md](CLAUDE.md) for the phase checklist.
+**Live:** https://project-stack-wheat.vercel.app
+
+> **Status:** Phase 1 complete (proof of concept deployed). See [CLAUDE.md](CLAUDE.md) for the phase checklist.
 
 ## Tech stack
 Python 3.12 · FastAPI · Jinja2 (server-rendered HTML) · Supabase (PostgreSQL, pgvector, Storage) · configurable vision LLM · Vercel

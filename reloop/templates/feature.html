@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/chute.html" import chute %}
+{% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
+{% block description %}{{ _(page.purpose) }}{% endblock %}
+
+{% block main %}
+<section class="page-head">
+  <div class="wrap page-head-row">
+    <div class="page-bin lane--{{ page.lane }}" aria-hidden="true"><span>{{ lane_stencils[page.lane] }}</span></div>
+    <div>
+      <h1 class="display-1">{{ _(page.title) }}</h1>
+      <p class="page-purpose">{{ _(page.purpose) }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="wrap feature-grid">
+    {% if page.slug == 'scan' %}
+    <div class="panel">
+      {% if received %}
+      <p class="notice" role="status">{{ icon('check', 18) }} {{ _('We got your photo, %(name)s, but nothing was saved. AI identification goes live in Phase 3.', name=received) }}</p>
+      {% endif %}
+      {{ chute(_('Identify this item')) }}
+    </div>
+    {% endif %}
+
+    <div class="panel panel--soon">
+      <h2 class="display-3">{{ _('What this page will do') }}</h2>
+      <p class="soon-line">{{ icon('clock', 16) }} {{ _('Arrives in Phase %(n)s', n=page.phase) }}</p>
+      <ul class="checklist">
+        {% for item in page.will_do %}
+        <li>{{ icon('check', 18) }}<span>{{ _(item) }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="soon-foot"><a href="/">{{ _('Back to the lanes') }}</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

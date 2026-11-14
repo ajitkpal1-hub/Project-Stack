@@ -1,25 +1,124 @@
-<!doctype html>
-<html lang="en-IN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RELOOP AI</title>
-  <meta name="description" content="RELOOP AI: sort smart, reuse more, waste less.">
-  <link rel="stylesheet" href="/css/poc.css">
-</head>
-<body>
-  <main class="poc">
-    <h1>RELOOP AI</h1>
-    <p class="tagline">Sort Smart. Reuse More. Waste Less.</p>
-    <p>This is the Phase 1 proof of concept. It shows that a Python server-rendered app runs here. The full interface arrives in Phase 2.</p>
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/chute.html" import chute %}
+{% block title %}RELOOP AI | {{ _('Sort Smart. Reuse More. Waste Less.') }}{% endblock %}
 
-    <h2>Integrations</h2>
-    <ul class="status">
-      {% for name, ready in integrations.items() %}
-      <li><span>{{ name | capitalize }}</span><span class="{{ 'on' if ready else 'off' }}">{{ 'Configured' if ready else 'Not configured yet' }}</span></li>
+{% block main %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <h1 id="hero-title" class="hero-title">
+      <span>{{ _("Don't throw it away.") }}</span>
+      <span class="hero-title-accent">{{ _('Give it a better way.') }}</span>
+    </h1>
+    <p class="hero-tagline">{{ _('Sort Smart. Reuse More. Waste Less.') }}</p>
+    <p class="hero-lede">{{ _("Photograph any household item. RELOOP AI tells you which bin it goes in, warns you if it's hazardous, and shows you who could reuse it in Thakurli, Dombivli and Kalyan.") }}</p>
+
+    {{ chute(_('Upload waste photo'), show_donate=true) }}
+  </div>
+
+  <nav class="lanes wrap" aria-label="{{ _('Waste lanes') }}">
+    {% for lane in lanes %}
+    <a class="lane lane--{{ lane.category.value }}" href="#lane-{{ lane.category.value }}">
+      <span class="lane-lid" aria-hidden="true"></span>
+      <span class="lane-name">{{ lane.stencil }}</span>
+      <span class="lane-gist">{{ _(lane.gist) }}</span>
+    </a>
+    {% endfor %}
+  </nav>
+</section>
+
+<section class="section guide" aria-labelledby="guide-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="guide-title" class="display-2">{{ _('What goes in each lane') }}</h2>
+      <p>{{ _('General household guidance. Local rules can differ. Verified, source-backed answers arrive with the disposal assistant.') }}</p>
+    </div>
+    <ol class="guide-list">
+      {% for lane in lanes %}
+      <li class="guide-row" id="lane-{{ lane.category.value }}">
+        <div class="guide-bin lane--{{ lane.category.value }}"><span>{{ lane.stencil }}</span></div>
+        <div class="guide-body">
+          <h3>{{ _(lane.name) }}{% if lane.hazard %}<span class="tag tag-hazard">{{ icon('alert', 14) }}{{ _('Handle with care') }}</span>{% endif %}</h3>
+          <p class="guide-examples">{{ lane.examples | map('string') | join(' · ') }}</p>
+        </div>
+        <p class="guide-where">{{ _(lane.where) }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<section class="section how" aria-labelledby="how-title">
+  <div class="wrap">
+    <h2 id="how-title" class="display-2">{{ _('How it works') }}</h2>
+    <ol class="route">
+      <li class="stop">
+        <span class="stop-no">1</span>
+        <h3>{{ _('Snap') }}</h3>
+        <p>{{ _("Photograph the item. If there's more than one material, we'll try to spot each part.") }}</p>
+      </li>
+      <li class="stop">
+        <span class="stop-no">2</span>
+        <h3>{{ _('Sort') }}</h3>
+        <p>{{ _("We name the lane and show how sure we are. If it might be hazardous, we ask before advising.") }}</p>
+        <ul class="certainty" aria-label="{{ _('Certainty marks') }}">
+          <li>{{ icon('cert-clear', 18) }} {{ _('Clear') }}</li>
+          <li>{{ icon('cert-likely', 18) }} {{ _('Likely') }}</li>
+          <li>{{ icon('cert-unsure', 18) }} {{ _('Unsure, so we ask') }}</li>
+        </ul>
+      </li>
+      <li class="stop">
+        <span class="stop-no">3</span>
+        <h3>{{ _('Send') }}</h3>
+        <p>{{ _('Get safe disposal steps, a nearby collection point, or a way to donate it if it still works.') }}</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="section why" aria-labelledby="why-title">
+  <div class="wrap why-grid">
+    <h2 id="why-title" class="display-1">{{ _('Mixed waste is lost waste.') }}</h2>
+    <div class="why-points">
+      <div>
+        <h3>{{ _('Clean lanes can be used again') }}</h3>
+        <p>{{ _('Food scraps kept apart can become compost. Paper, plastic and metal kept clean and dry can go to recyclers instead of a dump.') }}</p>
+      </div>
+      <div>
+        <h3>{{ _('Some things hurt people if binned') }}</h3>
+        <p>{{ _('Batteries, chemicals, bulbs and syringes can injure the workers who sort our waste, and leak into soil and water. They need their own route.') }}</p>
+      </div>
+      <div>
+        <h3>{{ _('The best lane is often a person') }}</h3>
+        <p>{{ _('A working chair, a stack of textbooks or a warm jacket is worth more to a neighbour than to any bin.') }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section donations" aria-labelledby="don-title">
+  <div class="wrap">
+    <div class="section-head section-head--row">
+      <div>
+        <h2 id="don-title" class="display-2">{{ _('Up for grabs nearby') }}</h2>
+        <p class="demo-note">{{ icon('alert', 16) }} {{ _('Demonstration listings only. These are not real items or people.') }}</p>
+      </div>
+      <a class="btn btn-quiet" href="/donations">{{ _('Explore donations') }} {{ icon('arrow', 18) }}</a>
+    </div>
+    <ul class="chits">
+      {% for l in listings %}
+      <li class="chit">
+        <span class="stamp stamp--{{ l.status | lower }}">{{ _(l.status) }}</span>
+        <h3 class="chit-item">{{ l.item }} <span class="tag">{{ _('Demo') }}</span></h3>
+        <dl class="chit-fields">
+          <div><dt>{{ _('Category') }}</dt><dd>{{ _(l.category) }}</dd></div>
+          <div><dt>{{ _('Condition') }}</dt><dd>{{ l.condition }}</dd></div>
+          <div><dt>{{ _('Locality') }}</dt><dd>{{ icon('pin', 15) }} {{ l.locality }}</dd></div>
+          <div><dt>{{ _('Pickup') }}</dt><dd>{{ l.pickup }}</dd></div>
+        </dl>
+      </li>
       {% endfor %}
     </ul>
-    <p><a href="/api/health">View health check (JSON)</a></p>
-  </main>
-</body>
-</html>
+  </div>
+</section>
+{% endblock %}

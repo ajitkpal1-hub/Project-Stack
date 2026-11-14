@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T01:30:00+05:30",
+  "title": "Design System: RELOOP AI",
+  "extensions": {
+    "colorMeta": {
+      "paper":     { "role": "neutral",  "displayName": "Paper White",            "canonical": "#ffffff", "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"] },
+      "surface":   { "role": "neutral",  "displayName": "Soft Sage Surface",      "canonical": "#f2f4f1", "tonalRamp": ["#0a0c0a", "#242623", "#414240", "#60625f", "#818380", "#a4a6a3", "#c8cac7", "#eeefee"] },
+      "surface-2": { "role": "neutral",  "displayName": "Sage Tint",              "canonical": "#e6eae4", "tonalRamp": ["#0a0c08", "#232622", "#40433e", "#5f625d", "#80847e", "#a3a6a1", "#c7cac5", "#edefed"] },
+      "line":      { "role": "neutral",  "displayName": "Hairline",               "canonical": "#d5dbd3", "tonalRamp": ["#0b0b0a", "#242524", "#414340", "#5f625e", "#80847f", "#a2a7a0", "#c5cbc4", "#edefec"] },
+      "ink":       { "role": "neutral",  "displayName": "Bin Ink",                "canonical": "#14211a", "tonalRamp": ["#040e08", "#1c2821", "#39453f", "#5a645e", "#7c8580", "#a0a7a3", "#c5cbc7", "#edefee"] },
+      "ink-soft":  { "role": "neutral",  "displayName": "Soft Ink",               "canonical": "#4d5a52", "tonalRamp": ["#070d09", "#1e2822", "#3a453e", "#58655d", "#7a867e", "#9ea8a2", "#c3ccc6", "#edefee"] },
+      "wet":       { "role": "primary",  "displayName": "Wet-Bin Forest Green",   "canonical": "#1f6b3a", "tonalRamp": ["#001200", "#00300d", "#075026", "#2a7242", "#579266", "#81b38d", "#abd6b4", "#e7f2e9"] },
+      "wet-deep":  { "role": "primary",  "displayName": "Deep Forest",            "canonical": "#164f2b", "tonalRamp": ["#001200", "#002f11", "#154e2b", "#3f6d4c", "#658e70", "#8daf95", "#b6d2bc", "#eaf1eb"] },
+      "dry":       { "role": "secondary", "displayName": "Dry-Bin Blue",          "canonical": "#1d5fa8", "tonalRamp": ["#00072d", "#002354", "#03417e", "#2162aa", "#4e85c6", "#79a8e2", "#a5cdfe", "#e5f0fd"] },
+      "reuse":     { "role": "secondary", "displayName": "Reuse Orange",          "canonical": "#a9500c", "tonalRamp": ["#220000", "#470f00", "#6f2a00", "#994600", "#bd6936", "#dc9066", "#fab894", "#fdeae0"] },
+      "textile":   { "role": "secondary", "displayName": "Textile Plum",          "canonical": "#7a3e8f", "tonalRamp": ["#190023", "#380c46", "#5b276d", "#7f4494", "#9e6bb1", "#be91d0", "#dfb9ee", "#f5eaf9"] },
+      "ewaste":    { "role": "secondary", "displayName": "E-Waste Slate",         "canonical": "#3f4a54", "tonalRamp": ["#060c12", "#1e262e", "#39434d", "#58636c", "#7a848c", "#9ea6ae", "#c3cad0", "#edeff0"] },
+      "hazard":    { "role": "secondary", "displayName": "Hazard Red",            "canonical": "#b42318", "tonalRamp": ["#2b0000", "#550000", "#820000", "#b12116", "#d15545", "#ef8171", "#ffac9d", "#ffe7e3"] },
+      "medical":   { "role": "secondary", "displayName": "Biomedical Yellow",     "canonical": "#e2b007", "tonalRamp": ["#140900", "#332200", "#563e00", "#7b5c00", "#a27c00", "#cc9e00", "#f2c242", "#fbedce"] },
+      "unsure":    { "role": "secondary", "displayName": "Unsure Grey",           "canonical": "#646d67", "tonalRamp": ["#080c0a", "#212723", "#3d443f", "#5b645e", "#7c857f", "#a0a7a2", "#c4cbc7", "#edefee"] }
+    },
+    "typographyMeta": {
+      "hero":     { "displayName": "Hero",     "purpose": "Homepage headline only; stencil, uppercase, 800." },
+      "display":  { "displayName": "Display",  "purpose": "Feature page titles and the 'why' statement." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings." },
+      "title":    { "displayName": "Title",    "purpose": "h3 in guide rows, steps, chits; button face." },
+      "body":     { "displayName": "Body",     "purpose": "Running text; ledes at 1.1875rem in soft ink, capped at 40-42rem." },
+      "label":    { "displayName": "Label",    "purpose": "Tags, sentence case." }
+    },
+    "shadows": [
+      { "name": "lift", "value": "0 1px 2px rgb(20 33 26 / 0.06), 0 6px 18px -6px rgb(20 33 26 / 0.14)", "purpose": "Paper objects only: donation chits and the open mobile menu sheet." },
+      { "name": "bin-lid", "value": "inset 0 0.5rem 0 rgb(0 0 0 / 0.2)", "purpose": "Moulded lid band on guide bins (0.625rem on page-head bins)." }
+    ],
+    "motion": [
+      { "name": "press-lane", "value": "transform 90ms ease-out; translateY(3px) on :active", "purpose": "The one signature motion: pressing a lane drops the bin." },
+      { "name": "press-button", "value": "transform 80ms ease-out; translateY(1px) on :active", "purpose": "Button press feedback." },
+      { "name": "colour-state", "value": "120ms ease-out (buttons), 160ms ease-out (chute fill)", "purpose": "Colour and border state changes. Nothing animates on load or scroll." }
+    ],
+    "breakpoints": [
+      { "name": "phone-compact", "value": "max-width: 30em" },
+      { "name": "md", "value": "48em" },
+      { "name": "lg", "value": "62em" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Forest green pill for the main action on a surface, with trailing arrow.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Upload waste photo <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M13 6l6 6-6 6\"/></svg></button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 48px; padding: 0 1.5rem; border-radius: 999px; border: 2px solid transparent; font: 700 1.0625rem/1 Mukta, system-ui, sans-serif; cursor: pointer; transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 80ms ease-out; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 3px solid #14211a; outline-offset: 3px; } .ds-btn-primary { background: #1f6b3a; color: #fff; } .ds-btn-primary:hover { background: #164f2b; }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Paper pill with hairline border for secondary actions.",
+      "html": "<a class=\"ds-btn-quiet\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"4\" y=\"9\" width=\"16\" height=\"11\" rx=\"1.5\"/><path d=\"M3 9h18\"/><path d=\"M12 9v11\"/><path d=\"M12 9c-1.5-3-5-3.5-5-1.25S10 9 12 9zm0 0c1.5-3 5-3.5 5-1.25S14 9 12 9z\"/></svg> Donate an item</a>",
+      "css": ".ds-btn-quiet { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 48px; padding: 0 1.5rem; border-radius: 999px; border: 2px solid #d5dbd3; background: #fff; color: #14211a; font: 700 1.0625rem/1 Mukta, system-ui, sans-serif; text-decoration: none; transition: border-color 120ms ease-out, transform 80ms ease-out; } .ds-btn-quiet:hover { border-color: #14211a; } .ds-btn-quiet:active { transform: translateY(1px); } .ds-btn-quiet:focus-visible { outline: 3px solid #14211a; outline-offset: 3px; }"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Sentence-case pill for Demo labels and the hazard warning.",
+      "html": "<span class=\"ds-tag\">Demo</span> <span class=\"ds-tag ds-tag-hazard\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4 2.8 19.5a.7.7 0 0 0 .6 1h17.2a.7.7 0 0 0 .6-1z\"/><path d=\"M12 10v4.5\"/><path d=\"M12 17.6v.1\"/></svg>Handle with care</span>",
+      "css": ".ds-tag { display: inline-flex; align-items: center; gap: 0.3em; padding: 0.1em 0.55em; border-radius: 999px; background: #e6eae4; color: #4d5a52; font: 700 0.75rem/1.5 Mukta, system-ui, sans-serif; letter-spacing: 0.02em; } .ds-tag-hazard { background: #fbe9e7; color: #b42318; }"
+    },
+    {
+      "name": "Upload Chute",
+      "kind": "input",
+      "refersTo": "chute-slot",
+      "description": "The single upload control: the whole ink slot is the file picker and turns green when a photo is chosen (CSS :has).",
+      "html": "<form class=\"ds-chute\"><label class=\"ds-chute-slot\"><span class=\"ds-chute-label ds-empty\">Add a photo of the item</span><span class=\"ds-chute-label ds-ready\">Photo ready</span><span class=\"ds-chute-hint\">JPG, PNG or WEBP</span><input class=\"ds-chute-input\" type=\"file\" accept=\"image/*\" required></label></form>",
+      "css": ".ds-chute { padding: 0.75rem; background: #f2f4f1; border-radius: 20px 20px 12px 12px; } .ds-chute-slot { display: grid; gap: 0.5rem; padding: 1rem 1.5rem; background: #14211a; color: #fff; border-radius: 12px; cursor: pointer; transition: background-color 160ms ease-out; font-family: Mukta, system-ui, sans-serif; } .ds-chute-slot:focus-within { outline: 3px solid #1f6b3a; outline-offset: 3px; } .ds-chute-label { font-weight: 700; font-size: 1.125rem; line-height: 1.3; } .ds-ready { display: none; } .ds-chute-hint { color: #c9d3cc; font-size: 0.9375rem; } .ds-chute-input { width: 100%; padding: 0.5rem; border-radius: 999px; color: #dfe6e1; background: rgb(255 255 255 / 0.08); border: 1px solid rgb(255 255 255 / 0.18); font: 500 0.9375rem Mukta, system-ui, sans-serif; } .ds-chute-input:focus-visible { outline: none; } .ds-chute-input::file-selector-button { margin-right: 0.75rem; padding: 0.5rem 1rem; border: 0; border-radius: 999px; background: #fff; color: #14211a; font: 700 0.9375rem Mukta, system-ui, sans-serif; cursor: pointer; } .ds-chute:has(.ds-chute-input:valid) .ds-chute-slot { background: #1f6b3a; } .ds-chute:has(.ds-chute-input:valid) .ds-empty { display: none; } .ds-chute:has(.ds-chute-input:valid) .ds-ready { display: block; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-desktop",
+      "description": "Desktop header: stencil wordmark, Mukta 500 links, green underline on the active page, account pill.",
+      "html": "<header class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 32 32\" aria-hidden=\"true\"><rect width=\"32\" height=\"32\" rx=\"8\" fill=\"#1f6b3a\"/><circle cx=\"16\" cy=\"16\" r=\"8.5\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4.5\" stroke-dasharray=\"22.7 4\" transform=\"rotate(-62 16 16)\"/></svg><span class=\"ds-wordmark\">RELOOP<span>AI</span></span></a><nav><a href=\"#\" aria-current=\"page\">Home</a><a href=\"#\">Scan</a><a href=\"#\">Donate</a><a class=\"ds-account\" href=\"#\">My dashboard</a></nav></header>",
+      "css": ".ds-nav { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 68px; padding: 0 16px; background: #fff; border-bottom: 1px solid #d5dbd3; font-family: Mukta, system-ui, sans-serif; } .ds-brand { display: inline-flex; align-items: center; gap: 0.75rem; color: #14211a; text-decoration: none; } .ds-wordmark { font: 800 1.75rem/1 'Big Shoulders Stencil', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.04em; } .ds-wordmark span { margin-left: 0.18em; color: #1f6b3a; } .ds-nav nav { display: flex; align-items: center; gap: 0.25rem; } .ds-nav nav a { padding: 0.5rem 0.75rem; color: #14211a; font-weight: 500; text-decoration: none; border-radius: 6px; } .ds-nav nav a:hover { background: #f2f4f1; } .ds-nav nav a[aria-current='page'] { box-shadow: inset 0 -3px 0 #1f6b3a; border-radius: 0; } .ds-nav nav a:focus-visible { outline: 3px solid #14211a; outline-offset: 3px; } .ds-nav nav .ds-account { border: 2px solid #d5dbd3; border-radius: 999px; padding: 0.5rem 1rem; } .ds-nav nav .ds-account:hover { background: none; border-color: #14211a; }"
+    },
+    {
+      "name": "Lane Bin",
+      "kind": "custom",
+      "refersTo": "lane",
+      "description": "Signature: a bin-shaped link in its municipal colour, lid band on top, stencil name; drops 3px on press.",
+      "html": "<div class=\"ds-lanes\"><a class=\"ds-lane\" style=\"--lane:#1f6b3a\" href=\"#\"><span class=\"ds-lid\"></span><span class=\"ds-lane-name\">Wet</span><span class=\"ds-gist\">Food and garden waste</span></a><a class=\"ds-lane\" style=\"--lane:#b42318\" href=\"#\"><span class=\"ds-lid\"></span><span class=\"ds-lane-name\">Hazard</span><span class=\"ds-gist\">Chemicals, batteries, bulbs</span></a><a class=\"ds-lane\" style=\"--lane:#e2b007;--lane-ink:#14211a\" href=\"#\"><span class=\"ds-lid\"></span><span class=\"ds-lane-name\">Medical</span><span class=\"ds-gist\">Medicines, sharps, sanitary</span></a></div>",
+      "css": ".ds-lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; } .ds-lane { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 10rem; padding: 2rem 1rem 1rem; border-radius: 12px 12px 6px 6px; background: var(--lane); color: var(--lane-ink, #fff); text-decoration: none; overflow: hidden; transition: transform 90ms ease-out; font-family: Mukta, system-ui, sans-serif; } .ds-lane:active { transform: translateY(3px); } .ds-lane:focus-visible { outline: 3px solid #14211a; outline-offset: 3px; } .ds-lid { position: absolute; inset: 0 0 auto 0; height: 0.875rem; background: rgb(0 0 0 / 0.22); border-bottom: 2px solid rgb(255 255 255 / 0.18); } .ds-lane:hover .ds-lid { background: rgb(0 0 0 / 0.32); } .ds-lane-name { font: 800 1.875rem/0.95 'Big Shoulders Stencil', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; } .ds-gist { margin-top: 0.25rem; font-size: 0.875rem; line-height: 1.3; }"
+    },
+    {
+      "name": "Certainty Marks",
+      "kind": "custom",
+      "refersTo": "certainty",
+      "description": "AI certainty as shape plus word: filled, half, hollow. Never a percentage.",
+      "html": "<ul class=\"ds-cert\"><li><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"7.5\" fill=\"currentColor\"/></svg> Clear</li><li><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"7.5\"/><path d=\"M12 4.5a7.5 7.5 0 0 1 0 15z\" fill=\"currentColor\"/></svg> Likely</li><li><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"7.5\"/></svg> Unsure, so we ask</li></ul>",
+      "css": ".ds-cert { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 0; padding: 0; list-style: none; font: 500 0.9375rem Mukta, system-ui, sans-serif; color: #14211a; } .ds-cert li { display: inline-flex; align-items: center; gap: 0.25rem; } .ds-cert svg { color: #1f6b3a; }"
+    },
+    {
+      "name": "Donation Chit with Stamp",
+      "kind": "card",
+      "refersTo": "chit",
+      "description": "Listing as a paper slip with lift shadow, scalloped top, and a rotated status stamp that never disappears.",
+      "html": "<div class=\"ds-chit\"><span class=\"ds-stamp\" style=\"color:#1f6b3a\">Available</span><h3>School textbooks, class 8 <span class=\"ds-tag\">Demo</span></h3><dl><div><dt>Condition</dt><dd>Good</dd></div><div><dt>Locality</dt><dd>Dombivli East</dd></div></dl></div>",
+      "css": ".ds-chit { position: relative; display: grid; gap: 0.5rem; padding: 1.5rem; background: #fff; border-radius: 12px; box-shadow: 0 1px 2px rgb(20 33 26 / 0.06), 0 6px 18px -6px rgb(20 33 26 / 0.14); font-family: Mukta, system-ui, sans-serif; color: #14211a; } .ds-chit::before { content: ''; position: absolute; left: 1.5rem; right: 1.5rem; top: 0; height: 6px; background: radial-gradient(circle at 5px -1px, #f2f4f1 4px, transparent 4.5px) 0 0 / 14px 6px repeat-x; } .ds-chit h3 { margin: 0; font-size: 1.3125rem; font-weight: 700; } .ds-tag { padding: 0.1em 0.55em; border-radius: 999px; background: #e6eae4; color: #4d5a52; font: 700 0.75rem/1.5 Mukta, sans-serif; } .ds-chit dl { margin: 0.5rem 0 0; padding-top: 0.75rem; border-top: 1px dashed #d5dbd3; display: grid; gap: 0.5rem; } .ds-chit dl div { display: grid; grid-template-columns: 6rem 1fr; } .ds-chit dt { color: #4d5a52; font-size: 0.9375rem; } .ds-chit dd { margin: 0; font-weight: 500; } .ds-stamp { justify-self: start; transform-origin: left center; transform: rotate(-6deg); padding: 0.15em 0.5em; border: 2.5px solid currentColor; border-radius: 6px; font: 800 1.125rem/1.1 'Big Shoulders Stencil', 'Arial Narrow', sans-serif; text-transform: uppercase; }"
+    },
+    {
+      "name": "Hazard Strip",
+      "kind": "custom",
+      "refersTo": "hazard-strip",
+      "description": "Fixed red safety band, identical on every page, between main content and footer.",
+      "html": "<aside class=\"ds-hazard\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4 2.8 19.5a.7.7 0 0 0 .6 1h17.2a.7.7 0 0 0 .6-1z\"/><path d=\"M12 10v4.5\"/><path d=\"M12 17.6v.1\"/></svg><p><strong>Never in the regular bin:</strong> batteries, medicines, syringes, chemicals, paint, tube lights. <a href=\"#\">How to handle hazardous items</a></p></aside>",
+      "css": ".ds-hazard { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem 16px; background: #b42318; color: #fff; font: 400 1.0625rem/1.6 Mukta, system-ui, sans-serif; } .ds-hazard p { margin: 0; } .ds-hazard svg { flex: none; margin-top: 0.15rem; } .ds-hazard a { color: #fff; font-weight: 700; white-space: nowrap; } .ds-hazard a:hover { color: #ffe4df; } .ds-hazard a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Municipal Bin Stencils",
+    "overview": "The interface is the segregation system itself. Every item belongs in a coloured, stencilled lane, and the product shows those lanes as moulded-plastic bins: flat colour fields with a darker lid band across a rounded top, stencilled uppercase names, painted dashed lines as route markers. The ground is plain white with soft green-grey surfaces, so the eight municipal colours are the only loud things on a page and each one means a destination.\n\nDensity is calm and practical, sized for a household member on a low-end Android phone on mobile data: large tap targets (48px buttons, 44px menu control), one body face, self-hosted fonts, every graphic an inline SVG. Motion is limited to one press-down on lanes and buttons and short colour transitions; nothing animates on load or on scroll.\n\nHonesty is a visual material here. Certainty is drawn as a shape, demo content is labelled in place, listing statuses are stamped on, and the red hazard strip sits at the foot of every page.",
+    "keyCharacteristics": [
+      "White ground, ink text, soft neutral surfaces; forest green (the wet-waste lane) doubles as the brand accent.",
+      "Eight lane colours taken from municipal bins, each carrying text that passes WCAG AA.",
+      "Big Shoulders Stencil, uppercase, weight 800, for headlines, lane names, step numbers, stamps and the wordmark; Mukta for everything else.",
+      "Bin silhouette: bigger radius on top corners than bottom, with a darker lid band.",
+      "Flat by default; one soft lift shadow for paper chits and the open mobile menu."
+    ],
+    "rules": [
+      { "name": "The Lane Means Destination Rule", "body": "A lane colour is used only for its waste stream (a bin, a guide row, a page bin) or a status that borrows its meaning (stamps). Never as decoration, a section tint or a gradient.", "section": "colors" },
+      { "name": "The Lane Ink Rule", "body": "Every lane fill pairs with white text, except Biomedical Yellow, which pairs with ink. A new lane or status colour ships only with a text pairing that passes WCAG AA.", "section": "colors" },
+      { "name": "The One Green Rule", "body": "Forest green is both the wet lane and the brand accent; no second accent colour exists. Interactive emphasis is green or ink.", "section": "colors" },
+      { "name": "The Stencil Is For Names Rule", "body": "The stencil face sets headings, lane names, step numbers, stamps and the wordmark, always uppercase and weight 800. It never sets sentences longer than a headline, form labels or body copy.", "section": "typography" },
+      { "name": "The Sentence-Case Small Type Rule", "body": "Small Mukta labels stay sentence case. No uppercase tracked micro-labels above headings.", "section": "typography" },
+      { "name": "The Paper Only Lifts Rule", "body": "Only paper-like objects (chits, the menu sheet) take the lift shadow. Panels, buttons and bins never take a drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use a lane colour only for its waste stream, with its tested text colour: white on all lanes, ink on Biomedical Yellow.",
+      "Do show AI certainty with the filled / half / hollow marks plus a word, never a percentage.",
+      "Do keep the red hazard strip identical on every page, between main content and footer.",
+      "Do show listing statuses as rotated stamps that stay visible; a rejected or completed listing keeps its stamp.",
+      "Do build Operate pages (scanner, assistant, donate, explore, centres, dashboards) inside the shared shell: header, page head with lane bin, hazard strip, footer.",
+      "Do use the bin silhouette (larger top radius, lid band) for anything that represents a lane.",
+      "Do label demonstration data in place with a \"Demo\" tag or demo note.",
+      "Do keep motion to colour transitions of 160ms or less and the single press-down; respect reduced motion.",
+      "Do keep tap targets at 44px or more and the focus outline at 3px (ink on light, white on red and ink grounds)."
+    ],
+    "donts": [
+      "Don't show certainty as a percentage, score or progress bar.",
+      "Don't introduce a second accent colour or use lane colours as decorative tints or gradients.",
+      "Don't put white text on Biomedical Yellow.",
+      "Don't set body copy, form labels or long sentences in the stencil face.",
+      "Don't add uppercase tracked eyebrow labels above headings.",
+      "Don't add drop shadows to panels, buttons or bins; only paper objects lift (the inset bin lid is not a drop shadow).",
+      "Don't animate on load or scroll, or add motion beyond press feedback.",
+      "Don't ship raster icons or icon fonts; icons are inline SVG from the one family."
+    ]
+  }
+}

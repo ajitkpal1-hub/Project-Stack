@@ -1,0 +1,20 @@
+{% from "partials/icons.html" import icon %}
+{# The chute: one control. The whole dark slot is the file picker; when a photo is
+   chosen it turns green and says so (CSS :has, no JavaScript). #}
+{% macro chute(button_label, show_donate=false) -%}
+<form class="chute" action="/scan" method="post" enctype="multipart/form-data">
+  <label class="chute-slot">
+    <span class="chute-icon">{{ icon('camera', 26) }}<span class="chute-icon-ready">{{ icon('check', 26) }}</span></span>
+    <span class="chute-text">
+      <span class="chute-label chute-label--empty">{{ _('Add a photo of the item') }}</span>
+      <span class="chute-label chute-label--ready">{{ _('Photo ready') }}</span>
+      <span class="chute-hint">{{ _('JPG, PNG or WEBP') }}</span>
+    </span>
+    <input class="chute-input" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+  </label>
+  <div class="chute-actions">
+    <button class="btn btn-primary" type="submit">{{ button_label }} {{ icon('arrow', 18) }}</button>
+    {% if show_donate %}<a class="btn btn-quiet" href="/donate">{{ icon('gift', 18) }} {{ _('Donate an item') }}</a>{% endif %}
+  </div>
+</form>
+{%- endmacro %}
