@@ -272,3 +272,10 @@ def test_assistant_escapes_question(client):
     assistant_route._assistant_override = KnowledgeAssistant(loaded_store(), HashEmbedder(), None, SETTINGS)
     html = client.post("/assistant", data={"question": "<script>alert(1)</script> batteries"}).text
     assert "<script>alert(1)</script>" not in html
+
+
+@pytest.mark.parametrize("key,expect_bearer", [("sb_secret_abc123", False), ("eyJhbGciOi.legacy.jwt", True)])
+def test_supabase_key_headers(key, expect_bearer):
+    s = SupabaseStore("https://abc.supabase.co", key)
+    assert s._headers["apikey"] == key
+    assert ("Authorization" in s._headers) is expect_bearer

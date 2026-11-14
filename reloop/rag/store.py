@@ -71,11 +71,11 @@ class SupabaseStore:
 
     def __init__(self, url: str, service_role_key: str, timeout_s: float = 20.0):
         self._base = url.rstrip("/") + "/rest/v1"
-        self._headers = {
-            "apikey": service_role_key,
-            "Authorization": f"Bearer {service_role_key}",
-            "Content-Type": "application/json",
-        }
+        self._headers = {"apikey": service_role_key, "Content-Type": "application/json"}
+        # Legacy service_role keys are JWTs and also go in Authorization. New "sb_secret_"
+        # keys are not JWTs: Supabase expects them in the apikey header only.
+        if not service_role_key.startswith("sb_"):
+            self._headers["Authorization"] = f"Bearer {service_role_key}"
         self._timeout = timeout_s
 
     def _request(self, method: str, path: str, **kw) -> httpx.Response:
