@@ -7,7 +7,7 @@
 - **Web:** FastAPI with server-rendered Jinja2 HTML, plain forms and CSS. Small progressive-enhancement scripts are allowed only if a page truly needs one.
 - **Why not Streamlit:** Vercel runs Python as serverless functions. Connections are capped at 300s and instances scale up and down, so Streamlit's persistent session server is lost. The user approved FastAPI + HTML on 2026-11-15.
 - **Data:** Supabase PostgreSQL + pgvector + Storage, with row-level security on every table.
-- **AI:** configurable vision LLM and embedding providers (env vars), with Pydantic-typed agents.
+- **AI:** configurable vision LLM (`LLM_PROVIDER`: anthropic | mock) and embedding providers (env vars), with Pydantic-typed agents. Default model `claude-opus-5-5` (override with `LLM_MODEL`). Guardrails always run after the model, never instead of it.
 - **Deploy:** Vercel, zero-config FastAPI detection via root `app.py` exposing `app`. Source lives on GitHub (`reloop-ai`), and Vercel deploys through its GitHub import, not the CLI.
 
 ## Architecture
@@ -82,7 +82,7 @@ uv pip install --python .venv -r requirements-dev.txt
 - [x] Phase 1: deployed. Repo https://github.com/ajitkpal1-hub/Project-Stack, live https://project-stack-wheat.vercel.app (health verified 2026-11-15)
 - [ ] Set `APP_ENV=production` in Vercel env vars (currently reports "development")
 - [x] Phase 2: interface and navigation. "Municipal Bin Stencils" visual world (see DESIGN.md, PRODUCT.md, `.impeccable/surfaces/`), full homepage, shared shell, 7 honest "Arrives in Phase N" pages, 21 tests passing, finish review: ship (2026-11-15)
-- [ ] Phase 3: AI waste classification
+- [x] Phase 3: AI waste classification. Claude vision via `reloop/services/classifier.py` (structured outputs, server-side refusal fallback), Python guardrails in `reloop/services/guardrails.py`, condition check before any donation advice, mock classifier for tests/demo. 56 tests passing (2026-11-15). Waiting on the user's Anthropic API key for a live test.
 - [ ] Phase 4: RAG knowledge assistant
 - [ ] Phase 5: multi-agent workflow
 - [ ] Phase 6: donations + accounts (Supabase)

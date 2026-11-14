@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from fastapi import APIRouter, File, Request, UploadFile
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from reloop.models.categories import LANES
@@ -110,17 +110,13 @@ def home(request: Request) -> HTMLResponse:
     )
 
 
-@router.post("/scan", response_class=HTMLResponse)
-async def scan_submit(request: Request, photo: UploadFile | None = File(None)) -> HTMLResponse:
-    # Phase 2 placeholder: we read only the file name and store nothing.
-    filename = photo.filename if photo and photo.filename else None
-    return _feature(request, PAGES_BY_SLUG["scan"], received=filename)
-
-
 def _feature(request: Request, page: Page, **extra) -> HTMLResponse:
     return templates.TemplateResponse(
         request, "feature.html", {"page": page, "active": page.slug, "lanes": LANES, **extra}
     )
+
+
+SELF_RENDERED = {"scan"}  # pages with their own route module
 
 
 def _register(page: Page) -> None:
@@ -131,4 +127,5 @@ def _register(page: Page) -> None:
 
 
 for _page in PAGES:
-    _register(_page)
+    if _page.slug not in SELF_RENDERED:
+        _register(_page)

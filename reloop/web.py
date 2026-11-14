@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from reloop import __version__
 from reloop.config import get_settings
 from reloop.models.categories import LANES
-from reloop.routes import pages
+from reloop.routes import pages, scan
 from reloop.templating import templates
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +26,7 @@ def create_app() -> FastAPI:
         lane_stencils={lane.category.value: lane.stencil for lane in LANES},
     )
     app.include_router(pages.router)
+    app.include_router(scan.router)
 
     @app.get("/api/health")
     def health() -> dict:
