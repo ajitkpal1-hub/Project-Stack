@@ -21,7 +21,6 @@ class Settings(BaseSettings):
     embedding_model: str = ""  # defaults to voyage-4
     rag_top_k: int = 6
     rag_min_similarity: float = 0.35  # below this a passage is not treated as relevant
-    maps_api_key: str = ""
     osm_user_agent: str = ""  # identifies the app to OpenStreetMap; generic default, no personal details
     admin_emails: str = ""  # comma-separated; these accounts can use the admin queue
 
@@ -62,7 +61,6 @@ class Settings(BaseSettings):
             "supabase": bool(self.supabase_url.strip() and self.supabase_service_role_key.strip()),
             "llm": self.llm_mode == "mock" or bool(self.llm_mode == "anthropic" and self.llm_api_key.strip()),
             "embeddings": bool(self.embedding_provider.strip() and (self.embedding_api_key.strip() or self.embedding_provider.strip().lower() == "hash")),
-            "maps": bool(self.maps_api_key),
             "accounts": self.accounts_ready,
             "admins_configured": bool(self.admin_email_set),
             "anon_key_misconfigured": self.anon_key_is_secret,

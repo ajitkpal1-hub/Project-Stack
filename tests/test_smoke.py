@@ -75,7 +75,7 @@ def test_health_reports_ok(client):
     data = client.get("/api/health").json()
     assert data["status"] == "ok"
     assert data["python"].startswith("3.12")
-    assert set(data["integrations"]) == {"supabase", "llm", "embeddings", "maps", "accounts", "admins_configured", "anon_key_misconfigured"}
+    assert set(data["integrations"]) == {"supabase", "llm", "embeddings", "accounts", "admins_configured", "anon_key_misconfigured"}
 
 
 def test_health_never_exposes_secret_values(monkeypatch):
