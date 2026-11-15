@@ -80,12 +80,12 @@ uv pip install --python .venv -r requirements-dev.txt
 ## Current status
 - [x] Phase 1: architecture validated (FastAPI on Vercel), PoC app + health check, 4 tests passing locally
 - [x] Phase 1: deployed. Repo https://github.com/ajitkpal1-hub/Project-Stack, live https://project-stack-wheat.vercel.app (health verified 2026-11-15)
-- [ ] Set `APP_ENV=production` in Vercel env vars (currently reports "development")
+- [x] `APP_ENV=production` set in Vercel (health reports production, 2026-11-15)
 - [x] Phase 2: interface and navigation. "Municipal Bin Stencils" visual world (see DESIGN.md, PRODUCT.md, `.impeccable/surfaces/`), full homepage, shared shell, 7 honest "Arrives in Phase N" pages, 21 tests passing, finish review: ship (2026-11-15)
 - [x] Phase 3: AI waste classification. Claude vision via `reloop/services/classifier.py` (structured outputs, server-side refusal fallback), Python guardrails in `reloop/services/guardrails.py`, condition check before any donation advice, mock classifier for tests/demo. 56 tests passing (2026-11-15). Waiting on the user's Anthropic API key for a live test.
 - [x] Phase 4: RAG knowledge assistant. `reloop/rag/` (chunking, Voyage embeddings, Supabase pgvector store, Claude answers with citations), `scripts/ingest.py`, `supabase/migrations/0001_knowledge_base.sql`, 87 tests passing (2026-11-15). Six official documents verified and placed in `knowledge/` (manifest filled from the PDFs). Supabase project created and migration 0001 run (project ref ilkhnbdamwisdraxdzdo, region Seoul).
 - [x] Knowledge base loaded locally (2026-11-15): 6 documents, 423 chunks in Supabase. Voyage needs a payment method on file (free-tier limits fail ingestion); ingest batches and waits out 429s. `english_only = true` in the manifest drops scrambled Hindi from bilingual gazettes.
-- [ ] Add SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, EMBEDDING_PROVIDER=voyage, EMBEDDING_API_KEY to Vercel Production so the live assistant uses the knowledge base
+- [x] Supabase + Voyage keys in Vercel Production; live assistant answers from 6 loaded documents (health: supabase and embeddings true, verified 2026-11-15)
 - [ ] Phase 5: multi-agent workflow
 - [ ] Phase 6: donations + accounts (Supabase)
 - [ ] Phase 7: location search + verified partners
