@@ -56,7 +56,7 @@ def test_accepts_allowed_formats_and_reencodes_to_jpeg(fmt, ctype):
 
 def test_downscales_large_images():
     prepared = prepare_image(make_image("PNG", size=(4000, 3000)), "image/png")
-    assert max(prepared.width, prepared.height) == 1568
+    assert max(prepared.width, prepared.height) == 1024
 
 
 @pytest.mark.parametrize(

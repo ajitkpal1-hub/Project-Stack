@@ -154,6 +154,7 @@
             <p class="answer-none">{{ k.message }}</p>
             {% endif %}
             {% if k.sources %}{{ source_list(k.sources, prefix='rule-src-') }}{% endif %}
+            {% if k.mode.value == 'passages' %}<p class="action-row"><a class="btn btn-quiet btn-small" href="/assistant?question={{ k.question|urlencode }}">{{ _('Get a full answer from the assistant') }} {{ icon('arrow', 16) }}</a></p>{% endif %}
           </section>
           {% endif %}
 

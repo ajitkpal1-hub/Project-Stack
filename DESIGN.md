@@ -221,8 +221,8 @@ Tactile, plain pills.
 - **Chit:** donation listing as a paper slip: white, 12px radius, lift shadow, scalloped top edge, dashed rule above a two-column field list.
 
 ### Inputs / Fields
-- **The chute:** the one upload control. The whole ink slot is the label for the file input, with a camera badge, a bold prompt and a hint; the native file button is a white pill. Focus draws a 3px green outline around the slot.
-- **Filled state:** when a photo is chosen, CSS `:has(:valid)` turns the slot forest green, swaps the prompt to "Photo ready" and the camera for a check. No JavaScript.
+- **The chute:** the one photo control. An ink slot with a bold prompt and two pill buttons: **Take a photo** (white, opens the rear camera, touch screens only) and **Upload a photo** (outlined, arrow pointing up; the only button on computers, shown white). Focus draws a 3px white outline around the focused button.
+- **Ready and busy states:** `/js/scan.js` turns the slot forest green ("Photo ready"), shows "Scanning your photo… this takes a few seconds." and starts the scan; the Identify button is hidden when the script runs and is the fallback without it.
 
 ### Navigation
 - **Desktop (62em+):** Mukta 500 ink links in a row, sage hover, active page marked by a 3px green bottom inset; Admin in soft ink; account as a hairline-bordered pill.

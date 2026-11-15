@@ -43,6 +43,10 @@ class KnowledgeAgent:
             return None, AgentStep(agent=NAME, status=StepStatus.FAILED,
                                    summary="We couldn't check the official documents this time.")
 
+        if answer.mode == AnswerMode.PASSAGES:
+            # Scans quote the two most relevant passages word for word (no second AI call).
+            answer = answer.model_copy(update={"sources": answer.sources[:2],
+                                               "message": "From the official documents, quoted word for word:"})
         n = len(answer.sources)
         summaries = {
             AnswerMode.GROUNDED: (StepStatus.DONE, f"Found guidance in {n} passage(s) from the loaded official documents."),

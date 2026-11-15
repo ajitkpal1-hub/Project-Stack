@@ -85,7 +85,7 @@ class ClaudeClassifier:
                 # On a safety decline, the API retries on a fallback model in the same call.
                 betas=["server-side-fallback-2026-07-01"],
                 fallbacks="default",
-                output_config={"effort": "medium"},
+                output_config={"effort": "low"},  # simple classification: low effort is much faster
                 system=SYSTEM_PROMPT,
                 messages=[
                     {

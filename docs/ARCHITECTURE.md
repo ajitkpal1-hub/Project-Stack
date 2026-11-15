@@ -12,7 +12,7 @@ session state would be lost. Streamlit is not a supported framework there.
 **Decision (approved 2026-11-15).** FastAPI with Jinja2 templates and plain HTML forms. Every request is
 self-contained: state lives in Supabase or in signed-in cookies, never in server memory (per-instance caches
 are only an optimisation). Pages reload on submit, which suits upload → result flows and works on slow
-mobile data with no JavaScript.
+mobile data.
 
 ## Request flow
 ```
@@ -52,7 +52,8 @@ Supabase  ── Postgres + pgvector + Auth + Storage, row-level security on eve
 | 0005 | `rate_limits`, `hit_rate_limit()` |
 
 ## Key choices
-- **No JavaScript.** Allows a strict Content-Security-Policy (`script-src 'none'`) and fast pages on mobile data.
+- **Almost no JavaScript.** One small file (`public/js/scan.js`) starts a scan as soon as a photo is taken and shows
+  a "Scanning" state; every page still works without it. The policy allows only that file (`script-src 'self'`).
 - **Sign-in on the server.** Supabase Auth via REST; tokens in an HttpOnly cookie, so page scripts never see them.
 - **Deterministic ranking.** Recommendation and donation matching use fixed rules: cheaper, testable, can't invent.
 - **Qualitative certainty.** Clear / Likely / Unsure, never a percentage.

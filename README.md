@@ -12,7 +12,7 @@ facilities and give usable items a second life. The pilot covers Thakurli, Dombi
 
 | Page | What it does |
 |---|---|
-| **Scan** (`/scan`) | Photo of an item → the bin it belongs in, with a Clear / Likely / Unsure certainty word (never a made-up percentage), safety warnings, ranked options and what the official rules say. Asks about condition before suggesting a donation. |
+| **Scan** (`/scan`) | Take a photo with the phone camera, or upload one → the bin it belongs in, with a Clear / Likely / Unsure certainty word (never a made-up percentage), safety warnings, ranked options and what the official rules say. Asks about condition before suggesting a donation. |
 | **Ask** (`/assistant`) | Questions answered only from loaded official documents (Solid Waste, E-Waste and Bio-Medical Waste Rules), with numbered citations. Says so when the documents don't cover it. |
 | **Donate / Explore** (`/donate`, `/donations`) | List an item (admin-reviewed), browse by category and PIN, request it. The donor chooses who gets it; contact notes are shared only between the two of them. |
 | **Recycling** (`/centres`) | Search by locality or PIN: places verified by the RELOOP team first, then OpenStreetMap places clearly marked "not verified". |
@@ -35,7 +35,7 @@ checks them. No precise carbon claims. Hazardous and medical waste can never be 
 are never public. Full detail: [PRODUCT.md](PRODUCT.md).
 
 ## Tech stack
-Python 3.12 · FastAPI · Jinja2 server-rendered HTML (no JavaScript) · Supabase (PostgreSQL + pgvector +
+Python 3.12 · FastAPI · Jinja2 server-rendered HTML (one small progressive script) · Supabase (PostgreSQL + pgvector +
 Auth + Storage, row-level security on every table) · Anthropic Claude (vision + cited answers) ·
 Voyage embeddings · OpenStreetMap (Nominatim + Overpass) · Vercel.
 Why not Streamlit: see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

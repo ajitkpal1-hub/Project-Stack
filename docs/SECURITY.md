@@ -30,8 +30,8 @@ to enable accounts if `SUPABASE_ANON_KEY` holds a secret key (it would switch of
 - **Redirects**: `next=` only accepts paths on this site (`safe_next`).
 - **Output**: Jinja autoescaping everywhere; the only trusted HTML is the escaped CSRF field. Links from
   data (source, website) are rendered only when they start with `http://` or `https://`.
-- **Browser headers** (`reloop/security.py`): strict Content-Security-Policy (`script-src 'none'`, no
-  inline styles, images only from this site and the Supabase project), `frame-ancestors 'none'` and
+- **Browser headers** (`reloop/security.py`): strict Content-Security-Policy (`script-src 'self'`: only our own
+  `/js/scan.js`, no inline scripts, `connect-src 'none'`, no inline styles, images only from this site and the Supabase project), `frame-ancestors 'none'` and
   `X-Frame-Options: DENY` (no clickjacking), `nosniff`, `strict-origin-when-cross-origin`, HSTS on HTTPS.
 - **Errors**: friendly pages for 403/404/500 with no stack traces; Supabase and AI error bodies are never
   shown or logged; secrets are never logged; `/api/health` reports yes/no flags only.

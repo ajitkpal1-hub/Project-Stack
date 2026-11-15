@@ -52,9 +52,9 @@ def _render(request: Request, status_code: int = 200, **ctx) -> HTMLResponse:
 
 
 @router.get("/assistant", response_class=HTMLResponse)
-def assistant_page(request: Request) -> HTMLResponse:
+def assistant_page(request: Request, question: str = "") -> HTMLResponse:
     _, state, count = _status()
-    return _render(request, state=state, doc_count=count)
+    return _render(request, state=state, doc_count=count, question=" ".join(question.split())[:500] or None)
 
 
 @router.post("/assistant", response_class=HTMLResponse)

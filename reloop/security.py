@@ -123,11 +123,12 @@ def _photo_origin() -> str:
 
 
 def security_headers(secure: bool) -> dict[str, str]:
-    """No page runs JavaScript or inline styles, so the policy can be strict.
-    Listing photos come from Supabase Storage through short-lived signed links."""
+    """The only script is our own /js/scan.js (no inline scripts, no inline styles), so the
+    policy stays strict. Listing photos come from Supabase Storage through short-lived signed links."""
     csp = "; ".join([
         "default-src 'self'",
-        "script-src 'none'",
+        "script-src 'self'",
+        "connect-src 'none'",
         "style-src 'self'",
         "font-src 'self'",
         f"img-src 'self' data: {_photo_origin()}".strip(),

@@ -42,7 +42,7 @@ def _classifier():
 
 
 def _pipeline(classifier: Classifier | None) -> WastePipeline:
-    assistant = _assistant_override if _assistant_override is not None else get_assistant(get_settings())
+    assistant = _assistant_override if _assistant_override is not None else get_assistant(get_settings(), generate=False)
     repo = partner_repo()
     return WastePipeline(classifier, assistant, DirectoryPartners(repo) if repo else None)
 
@@ -73,13 +73,16 @@ def scan_page(request: Request) -> HTMLResponse:
 async def scan_submit(
     request: Request,
     photo: UploadFile | None = File(None),
+    camera: UploadFile | None = File(None),
     note: str = Form(""),
 ) -> HTMLResponse:
     classifier = _classifier()
     if classifier is None:
         return _render(request, status_code=503, error="AI scanning isn't switched on yet. Please check back soon.")
-    if photo is None or not photo.filename:
-        return _render(request, status_code=422, error="Please choose a photo of the item first.")
+    # The photo box has two pickers: "Take a photo" (camera) and "Upload a photo".
+    photo = next((f for f in (camera, photo) if f is not None and f.filename), None)
+    if photo is None:
+        return _render(request, status_code=422, error="Please take or choose a photo of the item first.")
 
     raw = await photo.read(MAX_UPLOAD_BYTES + 1)
     try:

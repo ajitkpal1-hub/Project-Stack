@@ -193,7 +193,7 @@ h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 700; }
 .hero-tagline { margin-top: var(--space-4); font-weight: 700; font-size: clamp(1.125rem, 2vw, 1.375rem); color: var(--ink); }
 .hero-lede { margin-top: var(--space-3); max-width: 40rem; font-size: 1.1875rem; color: var(--ink-soft); }
 
-/* the chute: one control, the whole slot is the file picker */
+/* the chute: take a photo or upload one. /js/scan.js adds .is-ready / .is-busy and starts the scan. */
 .chute {
   margin-top: var(--space-6);
   display: grid; gap: var(--space-3);
@@ -202,46 +202,48 @@ h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 700; }
   border-radius: var(--radius-l) var(--radius-l) var(--radius-m) var(--radius-m);
 }
 .chute-slot {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-3) var(--space-4);
+  display: grid; gap: var(--space-3);
   padding: var(--space-4);
   background: var(--ink); color: #fff; border-radius: var(--radius-m);
-  cursor: pointer;
   transition: background-color 160ms ease-out;
 }
-.chute-slot:focus-within { outline: 3px solid var(--wet); outline-offset: 3px; }
-.chute-icon { position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgb(255 255 255 / 0.12); }
-.chute-icon-ready { position: absolute; inset: 0; display: none; place-items: center; }
 .chute-text { display: grid; }
 .chute-label { font-weight: 700; font-size: 1.125rem; line-height: 1.3; }
 .chute-label--ready { display: none; }
 .chute-hint { color: #c9d3cc; font-size: 0.9375rem; line-height: 1.4; }
-.chute-input {
-  grid-column: 1 / -1; width: 100%; min-width: 0;
-  font: 500 0.9375rem var(--font-body); color: #dfe6e1;
-  padding: var(--space-2); border-radius: 999px;
-  background: rgb(255 255 255 / 0.08); border: 1px solid rgb(255 255 255 / 0.18);
-  cursor: pointer;
+.chute-pickers { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.chute-pick {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 52px; padding: 0 var(--space-4); border-radius: 999px;
+  background: #fff; color: var(--ink); font-weight: 700; cursor: pointer; text-align: center; line-height: 1.2;
 }
-.chute-input:focus-visible { outline: none; }
-.chute-input::file-selector-button {
-  margin-right: var(--space-3); padding: var(--space-2) var(--space-4);
-  border: 0; border-radius: 999px; background: #fff; color: var(--ink);
-  font: 700 0.9375rem var(--font-body); cursor: pointer;
+.chute-pick--upload { background: rgb(255 255 255 / 0.1); color: #fff; border: 1px solid rgb(255 255 255 / 0.4); }
+.chute-pick:focus-within { outline: 3px solid #fff; outline-offset: 2px; }
+.chute-pick .chute-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.chute-pick:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
+/* only touch screens (phones, tablets) get the camera button; computers get one upload button */
+@media not all and (pointer: coarse) {
+  .chute-pick--camera { display: none; }
+  .chute-pickers { grid-template-columns: 1fr; }
+  .chute-pick--upload { background: #fff; color: var(--ink); border: 0; }
 }
-/* filled state: a photo is in the chute */
-.chute:has(.chute-input:valid) .chute-slot { background: var(--wet); }
-.chute:has(.chute-input:valid) .chute-label--empty { display: none; }
-.chute:has(.chute-input:valid) .chute-label--ready { display: block; }
-.chute:has(.chute-input:valid) .chute-icon > .icon { visibility: hidden; }
-.chute:has(.chute-input:valid) .chute-icon-ready { display: grid; }
-.chute:has(.chute-input:valid) .chute-hint { color: #d6eadc; }
+/* a photo is chosen / the scan is running */
+.chute.is-ready .chute-slot { background: var(--wet); }
+.chute.is-ready .chute-label--empty { display: none; }
+.chute.is-ready .chute-label--ready { display: block; }
+.chute-busy { display: none; margin: 0; font-weight: 700; color: var(--wet-deep); }
+.chute.is-busy .chute-busy { display: block; }
+.chute.is-busy .chute-pickers, .chute.is-busy .chute-actions { opacity: 0.5; pointer-events: none; }
+.js .chute[data-autosubmit] .chute-submit { display: none; }  /* the scan starts by itself */
 .chute-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.chute-actions:empty { display: none; }
 .chute-actions .btn { flex: 1 1 auto; }
 
 @media (min-width: 48em) {
   .chute { grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; padding: var(--space-4); gap: var(--space-4); }
-  .chute-slot { padding: var(--space-4) var(--space-5); }
-  .chute-input { grid-column: 2; }
+  .chute-slot { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: var(--space-4) var(--space-5); }
+  .chute-pickers { min-width: 22rem; }
+  .chute-busy { grid-column: 1 / -1; }
   .chute-actions { flex-direction: column; justify-content: center; align-items: stretch; }
   .chute-actions .btn { flex: none; }
 }
@@ -253,8 +255,6 @@ h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 700; }
   .hero-lede { margin-top: var(--space-2); font-size: 1.0625rem; line-height: 1.55; }
   .chute { margin-top: var(--space-4); gap: var(--space-2); }
   .chute-slot { padding: var(--space-3); gap: var(--space-3); }
-  .chute-icon { display: none; }
-  .chute-slot .chute-text { grid-column: 1 / -1; }
   .chute-actions .btn-quiet { min-height: 40px; border-color: transparent; background: none; text-decoration: underline; text-underline-offset: 0.22em; }
   .lane { min-height: 5.25rem; padding: var(--space-4) var(--space-2) var(--space-2); }
   .lane-gist { display: none; }
@@ -462,6 +462,8 @@ h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 700; }
 @media (min-width: 62em) { .feature-grid { grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); align-items: start; } }
 .panel { padding: var(--space-5); border-radius: var(--radius-l); background: var(--surface); }
 .panel .chute { margin-top: 0; padding: 0; background: none; grid-template-columns: 1fr; }
+.panel .chute .chute-slot { grid-template-columns: 1fr; }
+.panel .chute .chute-pickers { min-width: 0; }
 .panel .chute-actions { flex-direction: row; justify-content: flex-start; }
 .panel--soon { background: var(--paper); border: 2px solid var(--line); }
 .soon-line { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); color: var(--ink-soft); font-weight: 500; }
@@ -799,3 +801,5 @@ a.stat-tile:hover { border-color: var(--ink); }
 .doc-unit { color: var(--ink-soft); font-size: 0.875rem; }
 @media (min-width: 40.01em) { .doc-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
 .stat-grid--small { margin-bottom: var(--space-3); }
+.chute-pick--upload .icon { transform: rotate(-90deg); }  /* arrow points up: upload */
+@media (max-width: 30em) { .chute-pick { padding: 0 var(--space-3); gap: 6px; font-size: 0.9375rem; white-space: nowrap; } .chute-pick .icon { width: 18px; height: 18px; } }

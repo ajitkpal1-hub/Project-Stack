@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import re
 
 import httpx
 import pytest
@@ -34,7 +35,8 @@ def client():
 def test_security_headers_on_pages(client, path):
     h = client.get(path).headers
     csp = h["content-security-policy"]
-    assert "script-src 'none'" in csp and "frame-ancestors 'none'" in csp and "object-src 'none'" in csp
+    assert "script-src 'self'" in csp and "connect-src 'none'" in csp
+    assert "frame-ancestors 'none'" in csp and "object-src 'none'" in csp and "'unsafe-inline'" not in csp
     assert "base-uri 'none'" in csp and "form-action 'self'" in csp
     assert h["x-frame-options"] == "DENY" and h["x-content-type-options"] == "nosniff"
     assert h["referrer-policy"] == "strict-origin-when-cross-origin"
@@ -57,7 +59,9 @@ def test_photo_host_allowed_only_when_https(monkeypatch):
 def test_templates_have_no_inline_scripts_or_styles(client):
     for path in ["/", "/scan", "/assistant", "/donate", "/donations", "/centres", "/account/login", "/account/signup"]:
         html = client.get(path).text.lower()
-        assert "<script" not in html and " style=" not in html and "javascript:" not in html, path
+        inline_scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>", html)
+        assert not inline_scripts and " style=" not in html and "javascript:" not in html and " onclick=" not in html, path
+        assert re.findall(r'<script src="([^"]+)"', html) == ["/js/scan.js?v=0.2.0"], path  # our own file only
 
 
 # ---------- uploads ----------
@@ -82,7 +86,7 @@ def test_bomb_upload_gets_friendly_page_not_crash(client):
 def test_normal_phone_photo_still_works():
     buf = io.BytesIO()
     Image.new("RGB", (4000, 3000), "white").save(buf, "JPEG")
-    assert prepare_image(buf.getvalue(), "image/jpeg").width == 1568
+    assert prepare_image(buf.getvalue(), "image/jpeg").width == 1024
 
 
 # ---------- usage limits ----------

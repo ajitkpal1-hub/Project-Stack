@@ -27,9 +27,8 @@ def test_scan_condition_then_sign_up_and_list_donation(app, new_page, tmp_path):
     photo.write_bytes(make_image())
     page = new_page(390)
     page.goto(f"{app.url}/scan")
-    page.set_input_files("form.chute input[type=file]", str(photo))
-    page.click("form.chute button[type=submit]")
-    page.wait_for_load_state("networkidle")
+    with page.expect_navigation():  # choosing a photo starts the scan by itself
+        page.set_input_files("form.chute input[name=photo]", str(photo))
     assert "Demo mode" in page.content() and "what condition is it in" in page.content()
     page.click("details.trace summary")
     assert page.is_visible("text=Safety review")
@@ -174,9 +173,33 @@ def test_security_headers_reach_the_browser(app, new_page):
     page = new_page()
     response = page.goto(f"{app.url}/")
     headers = response.headers
-    assert "script-src 'none'" in headers["content-security-policy"] and headers["x-frame-options"] == "DENY"
+    assert "script-src 'self'" in headers["content-security-policy"] and headers["x-frame-options"] == "DENY"
     errors = []
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
     for path in ["/", "/scan", "/donations", "/centres"]:
         page.goto(f"{app.url}{path}")
     assert not [e for e in errors if "Content Security Policy" in e], errors  # the strict policy breaks nothing
+
+
+def test_phone_shows_camera_and_upload_and_scans_straight_away(app, browser, tmp_path):
+    photo = tmp_path / "bottle.jpg"
+    photo.write_bytes(make_image())
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    try:
+        page = ctx.new_page()
+        page.goto(f"{app.url}/scan")
+        camera = page.locator("form.chute input[name=camera]")
+        assert camera.get_attribute("capture") == "environment" and camera.get_attribute("accept") == "image/*"
+        assert page.is_visible("label.chute-pick--camera") and page.is_visible("label.chute-pick--upload")
+        assert not page.is_visible("form.chute .chute-submit")  # no extra tap needed
+        with page.expect_navigation():
+            page.set_input_files("form.chute input[name=camera]", str(photo))
+        assert page.is_visible("#result-title")
+    finally:
+        ctx.close()
+
+
+def test_computer_shows_upload_only(app, new_page):
+    page = new_page(1440)
+    page.goto(f"{app.url}/scan")
+    assert page.is_visible("label.chute-pick--upload") and not page.is_visible("label.chute-pick--camera")

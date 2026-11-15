@@ -7,7 +7,7 @@ from PIL import Image, UnidentifiedImageError
 
 # Vercel functions reject request bodies over 4.5 MB, so we cap uploads below that.
 MAX_UPLOAD_BYTES = 4 * 1024 * 1024
-MAX_SIDE_PX = 1568  # larger images cost more tokens without helping recognition
+MAX_SIDE_PX = 1024  # enough detail to recognise household items; fewer tokens means faster, cheaper scans
 MAX_PIXELS = 40_000_000  # about 6300 x 6300; phone photos are around 12 megapixels
 ALLOWED_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 ALLOWED_CONTENT_TYPES = set(ALLOWED_FORMATS.values()) | {"image/jpg"}
