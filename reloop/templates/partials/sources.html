@@ -1,0 +1,16 @@
+{# Numbered list of knowledge-base passages, shared by the assistant and the scanner.
+   Links render only for http(s) URLs recorded in the manifest. #}
+{% macro source_list(sources, prefix='src-') -%}
+<ol class="sources">
+  {% for s in sources %}
+  <li id="{{ prefix }}{{ loop.index }}" class="source">
+    <span class="source-no">{{ loop.index }}</span>
+    <div>
+      <p class="source-title">{% if s.source_url and s.source_url.lower().startswith(('https://', 'http://')) %}<a href="{{ s.source_url }}" rel="noopener noreferrer" target="_blank">{{ s.title }}</a>{% else %}{{ s.title }}{% endif %}</p>
+      <p class="source-meta">{{ [s.publisher, s.published_on, s.heading, (_('page %(p)s', p=s.page_from) if s.page_from else none)] | select | join(' · ') }}{% if not (s.source_url and s.source_url.lower().startswith(('https://', 'http://'))) %} · {{ _('no link recorded') }}{% endif %}</p>
+      <blockquote class="source-quote">{{ s.content | truncate(420) }}</blockquote>
+    </div>
+  </li>
+  {% endfor %}
+</ol>
+{%- endmacro %}

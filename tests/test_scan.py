@@ -260,15 +260,15 @@ def test_condition_flow_round_trip(client):
     import html as html_lib
     import re
 
-    result_json = html_lib.unescape(re.search(r'name="result_json" value="([^"]+)"', html).group(1))
-    r = client.post("/scan/condition", data={"result_json": result_json, "condition": "works_clean"})
+    pipeline_json = html_lib.unescape(re.search(r'name="pipeline_json" value="([^"]+)"', html).group(1))
+    r = client.post("/scan/condition", data={"pipeline_json": pipeline_json, "condition": "works_clean"})
     assert r.status_code == 200
     assert "List it for donation" in r.text
 
 
 def test_condition_rejects_tampered_payload(client):
     use(MockClassifier())
-    r = client.post("/scan/condition", data={"result_json": '{"bad": true}', "condition": "works_clean"})
+    r = client.post("/scan/condition", data={"pipeline_json": '{"bad": true}', "condition": "works_clean"})
     assert r.status_code == 422
 
 
@@ -278,7 +278,9 @@ def test_tampered_payload_cannot_make_medical_donatable(client):
                                     components=[Component(name="x", material="y", category=WasteCategory.MEDICAL)]))
     tampered.reuse_status = ReuseStatus.POSSIBLY_REUSABLE
     tampered.recommended_action = Action.DONATE
-    r = client.post("/scan/condition", data={"result_json": tampered.model_dump_json(), "condition": "works_clean"})
+    from reloop.models.pipeline import DonationMatch, DonationStatus, PipelineResult
+    payload = PipelineResult(scan=tampered, donation=DonationMatch(status=DonationStatus.ELIGIBLE, reason="x"))
+    r = client.post("/scan/condition", data={"pipeline_json": payload.model_dump_json(), "condition": "works_clean"})
     assert "List it for donation" not in r.text
 
 

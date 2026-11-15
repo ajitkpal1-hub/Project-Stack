@@ -142,3 +142,14 @@ def get_generator(settings: Settings) -> Generator | None:
     if settings.llm_mode == "anthropic" and settings.llm_api_key.strip():
         return ClaudeGenerator(settings.llm_api_key.strip(), settings.llm_model.strip() or None)
     return None  # mock mode and unconfigured both fall back to verbatim passages
+
+
+def get_assistant(settings: Settings) -> KnowledgeAssistant | None:
+    """The knowledge assistant, or None when the store or embeddings aren't configured."""
+    from reloop.rag.embeddings import get_embedder
+    from reloop.rag.store import get_store
+
+    store, embedder = get_store(settings), get_embedder(settings)
+    if store is None or embedder is None:
+        return None
+    return KnowledgeAssistant(store, embedder, get_generator(settings), settings)

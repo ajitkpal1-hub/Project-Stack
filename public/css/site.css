@@ -552,6 +552,44 @@ h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 700; }
 .guard-notes .icon { color: var(--wet); margin-top: 0.25rem; }
 .scan-again { margin-bottom: var(--space-4); }
 
+/* multi-agent result sections (Phase 5) */
+.option-list { counter-reset: opt; display: grid; gap: var(--space-2); }
+.option-list li {
+  counter-increment: opt; display: grid; grid-template-columns: 2rem 1fr; column-gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-m); background: var(--surface);
+}
+.option-list li::before {
+  content: counter(opt); grid-row: span 2; display: grid; place-items: center; width: 1.75rem; height: 1.75rem;
+  border-radius: var(--radius-s) var(--radius-s) 4px 4px; background: var(--ink-soft); color: #fff;
+  font-family: var(--font-display); font-weight: 800; font-size: 1.0625rem;
+}
+.option-list li:first-child { background: #e4f1e8; }
+.option-list li:first-child::before { background: var(--wet); }
+.option-list span { color: var(--ink-soft); }
+
+.donation { padding: var(--space-4) var(--space-5); border-radius: var(--radius-m); border: 2px solid var(--line); }
+.donation ul { padding-left: 1.25rem; list-style: disc; display: grid; gap: var(--space-1); }
+.donation-sub { margin-top: var(--space-3); font-weight: 700; }
+.donation--eligible { border-color: var(--wet); }
+.donation--eligible h3 { color: var(--wet); }
+.donation--not_eligible h3 { color: var(--ink-soft); }
+
+.rules { padding-top: var(--space-5); border-top: 2px solid var(--ink); }
+.rules .answer-text { margin-top: 0; font-size: 1.0625rem; }
+.rules .sources { margin-top: var(--space-4); border-top-width: 1px; }
+
+.trace { border-radius: var(--radius-m); background: var(--surface); }
+.trace summary { min-height: 48px; display: flex; align-items: center; padding: 0 var(--space-4); font-weight: 700; cursor: pointer; }
+.trace summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.trace-list { display: grid; gap: var(--space-3); padding: 0 var(--space-4) var(--space-4); }
+.trace-step { display: grid; grid-template-columns: auto 1fr; gap: 0 var(--space-3); }
+.trace-agent { font-weight: 700; }
+.trace-status { justify-self: start; padding: 0 0.6em; border-radius: 999px; background: #e4f1e8; color: var(--wet-deep); font-weight: 700; font-size: 0.8125rem; line-height: 1.6; }
+.trace-step--changed .trace-status { background: #fdf3d6; color: #6b4e00; }
+.trace-step--skipped .trace-status { background: var(--surface-2); color: var(--ink-soft); }
+.trace-step--failed .trace-status { background: #fbe9e7; color: var(--hazard); }
+.trace-summary { grid-column: 1 / -1; color: var(--ink-soft); font-size: 0.9375rem; }
+
 /* ---------- disposal assistant ---------- */
 
 .ask-layout { display: grid; gap: var(--space-6); }

@@ -86,7 +86,7 @@ uv pip install --python .venv -r requirements-dev.txt
 - [x] Phase 4: RAG knowledge assistant. `reloop/rag/` (chunking, Voyage embeddings, Supabase pgvector store, Claude answers with citations), `scripts/ingest.py`, `supabase/migrations/0001_knowledge_base.sql`, 87 tests passing (2026-11-15). Six official documents verified and placed in `knowledge/` (manifest filled from the PDFs). Supabase project created and migration 0001 run (project ref ilkhnbdamwisdraxdzdo, region Seoul).
 - [x] Knowledge base loaded locally (2026-11-15): 6 documents, 423 chunks in Supabase. Voyage needs a payment method on file (free-tier limits fail ingestion); ingest batches and waits out 429s. `english_only = true` in the manifest drops scrambled Hindi from bilingual gazettes.
 - [x] Supabase + Voyage keys in Vercel Production; live assistant answers from 6 loaded documents (health: supabase and embeddings true, verified 2026-11-15)
-- [ ] Phase 5: multi-agent workflow
+- [x] Phase 5: multi-agent workflow. `reloop/agents/` (classification, knowledge, recommendation, donation, safety + `pipeline.py`) drives `/scan`; Safety Review runs last and fixes rather than trusts; knowledge failures degrade gracefully; condition re-plan makes no AI calls; no named partners until the Phase 7 verified directory. 127 tests passing, live local run with Claude + screenshots at 390/1000/1440 (2026-11-15).
 - [ ] Phase 6: donations + accounts (Supabase)
 - [ ] Phase 7: location search + verified partners
 - [ ] Phase 8: user + admin dashboards

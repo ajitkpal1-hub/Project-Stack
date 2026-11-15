@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/icons.html" import icon %}
 {% from "partials/chute.html" import chute %}
+{% from "partials/sources.html" import source_list %}
 {% set page = pages_by_slug['scan'] %}
 {% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
 {% block description %}{{ _(page.purpose) }}{% endblock %}
@@ -63,17 +64,50 @@
                 {% endfor %}
               </div>
             </fieldset>
-            <input type="hidden" name="result_json" value="{{ result.model_dump_json() }}">
+            <input type="hidden" name="pipeline_json" value="{{ pipeline.model_dump_json() }}">
             <button class="btn btn-primary" type="submit">{{ _('Update the advice') }} {{ icon('arrow', 18) }}</button>
           </form>
           {% endif %}
 
-          {% if result.clarifying_questions %}
+          {% if result.clarifying_questions and not (pipeline.condition and result.recommended_action.value != 'ask_first') %}
           <div class="questions">
             <h3>{{ _('Help us be sure') }}</h3>
             <ul>{% for q in result.clarifying_questions %}<li>{{ q }}</li>{% endfor %}</ul>
             <p>{{ _('Add the answer in the note box and scan again.') }}</p>
           </div>
+          {% endif %}
+
+          {% if pipeline.options|length > 1 %}
+          <section class="options" aria-labelledby="options-title">
+            <h3 id="options-title">{{ _('Your options, best first') }}</h3>
+            <ol class="option-list">
+              {% for o in pipeline.options %}
+              <li><strong>{{ _(o.title) }}</strong><span>{{ o.detail }}</span></li>
+              {% endfor %}
+            </ol>
+          </section>
+          {% endif %}
+
+          {% set d = pipeline.donation %}
+          {% if d and d.status != donation_status.NOT_APPLICABLE %}
+          <section class="donation donation--{{ d.status.value }}" aria-labelledby="donation-title">
+            <h3 id="donation-title">{{ icon('gift', 18) }}
+              {% if d.status == donation_status.ELIGIBLE %}{{ _('It can be donated') }}
+              {% elif d.status == donation_status.NEEDS_CONDITION %}{{ _('Maybe donatable') }}
+              {% else %}{{ _('Not for donation') }}{% endif %}
+            </h3>
+            <p>{{ d.reason }}</p>
+            {% if d.status == donation_status.ELIGIBLE %}
+            <p class="donation-sub">{{ _('Good places to offer it:') }}</p>
+            <ul>{% for t in d.receiver_types %}<li>{{ _(t) }}</li>{% endfor %}</ul>
+            {% if d.partners %}
+            <p class="donation-sub">{{ _('Verified partners near you:') }}</p>
+            <ul>{% for pt in d.partners %}<li><strong>{{ pt.name }}</strong>, {{ pt.locality }}</li>{% endfor %}</ul>
+            {% else %}
+            <p class="fineprint">{{ _("We haven't verified any donation partners in your area yet, so we don't name any. Verified partners arrive in Phase 7.") }}</p>
+            {% endif %}
+            {% endif %}
+          </section>
           {% endif %}
 
           <div class="result-cols">
@@ -93,7 +127,7 @@
           </div>
 
           <div class="next-actions">
-            {% if result.recommended_action.value == 'donate' and not result.needs_condition_check %}
+            {% if pipeline.donation and pipeline.donation.status == donation_status.ELIGIBLE %}
             <a class="btn btn-primary" href="/donate">{{ icon('gift', 18) }} {{ _('List it for donation') }}</a>
             {% endif %}
             {% if result.recommended_action.value in ['special_handling', 'recycle', 'dispose'] %}
@@ -105,6 +139,36 @@
           {% if result.guardrail_notes %}
           <ul class="guard-notes">{% for n in result.guardrail_notes %}<li>{{ icon('check', 16) }} {{ n }}</li>{% endfor %}</ul>
           {% endif %}
+          {% set k = pipeline.knowledge %}
+          {% if k %}
+          <section class="rules" aria-labelledby="rules-title">
+            <h3 id="rules-title">{{ _('What the official rules say') }}</h3>
+            {% if k.mode.value == 'grounded' %}
+            <div class="answer-text">
+              {% for seg in k.segments %}{{ seg.text }}{% for n in seg.source_numbers %}<a class="cite" href="#rule-src-{{ n }}" aria-label="{{ _('Source %(n)s', n=n) }}">{{ n }}</a>{% endfor %}{% endfor %}
+            </div>
+            {% elif k.mode.value == 'passages' %}
+            <p class="answer-badge answer-badge--quiet">{{ icon('alert', 16) }} {{ k.message }}</p>
+            {% else %}
+            <p class="answer-none">{{ k.message }}</p>
+            {% endif %}
+            {% if k.sources %}{{ source_list(k.sources, prefix='rule-src-') }}{% endif %}
+          </section>
+          {% endif %}
+
+          <details class="trace">
+            <summary>{{ _('How we worked this out') }}</summary>
+            <ol class="trace-list">
+              {% for st in pipeline.steps %}
+              <li class="trace-step trace-step--{{ st.status.value }}">
+                <span class="trace-agent">{{ _(st.agent) }}</span>
+                <span class="trace-status">{% if st.status == step_status.DONE %}{{ _('Done') }}{% elif st.status == step_status.CHANGED %}{{ _('Made fixes') }}{% elif st.status == step_status.SKIPPED %}{{ _('Skipped') }}{% else %}{{ _('Failed') }}{% endif %}</span>
+                <span class="trace-summary">{{ st.summary }}</span>
+              </li>
+              {% endfor %}
+            </ol>
+          </details>
+
           <p class="fineprint">{{ _('Identified from one photo. AI can be wrong, so check labels and follow your local collection rules.') }}</p>
         </div>
       </div>
@@ -130,6 +194,8 @@
           <li>{{ icon('cert-clear', 18) }}<span>{{ _('Shows how sure it is: Clear, Likely or Unsure. Never a made-up percentage.') }}</span></li>
           <li>{{ icon('alert', 18) }}<span>{{ _('Warns you first if anything could be hazardous') }}</span></li>
           <li>{{ icon('gift', 18) }}<span>{{ _('Asks about condition before it suggests donating') }}</span></li>
+          <li>{{ icon('check', 18) }}<span>{{ _('Checks the official documents we have loaded, and cites them') }}</span></li>
+          <li>{{ icon('check', 18) }}<span>{{ _('A final safety review has the last word on every answer') }}</span></li>
         </ul>
       </div>
       {% endif %}

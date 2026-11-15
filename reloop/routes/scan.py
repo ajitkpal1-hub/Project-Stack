@@ -1,6 +1,7 @@
-"""AI waste scanner: upload -> validate -> classify -> guardrails -> result.
+"""AI waste scanner, driven by the multi-agent workflow (reloop/agents/pipeline.py).
 
-Nothing is stored in Phase 3 (history arrives with accounts in Phase 6).
+upload -> validate -> Classification -> Knowledge -> Recommendation -> Donation Matching -> Safety Review -> page.
+Nothing is stored yet (history arrives with accounts in Phase 6).
 """
 
 import logging
@@ -11,9 +12,11 @@ from pydantic import ValidationError
 
 from reloop.config import get_settings
 from reloop.models.categories import LANES_BY_CATEGORY
-from reloop.models.classification import CONDITION_LABELS, Certainty, Condition, ScanResult
-from reloop.services.classifier import ClassifierUnavailable, get_classifier
-from reloop.services.guardrails import apply_condition, apply_guardrails
+from reloop.agents.pipeline import WastePipeline
+from reloop.models.classification import CONDITION_LABELS, Certainty, Condition
+from reloop.models.pipeline import DonationStatus, PipelineResult, StepStatus
+from reloop.rag.answer import get_assistant
+from reloop.services.classifier import Classifier, ClassifierUnavailable, get_classifier
 from reloop.templating import templates
 from reloop.utils.images import MAX_UPLOAD_BYTES, ImageValidationError, prepare_image
 
@@ -27,12 +30,18 @@ CERTAINTY_LABELS = {
 }
 CERTAINTY_ICONS = {Certainty.CLEAR: "cert-clear", Certainty.LIKELY: "cert-likely", Certainty.UNSURE: "cert-unsure"}
 
-# Lets the classifier be swapped in tests without touching settings.
+# Let tests swap the classifier and knowledge assistant without touching settings.
 _classifier_override = None
+_assistant_override = None
 
 
 def _classifier():
     return _classifier_override if _classifier_override is not None else get_classifier(get_settings())
+
+
+def _pipeline(classifier: Classifier | None) -> WastePipeline:
+    assistant = _assistant_override if _assistant_override is not None else get_assistant(get_settings())
+    return WastePipeline(classifier, assistant)
 
 
 def _render(request: Request, status_code: int = 200, **ctx) -> HTMLResponse:
@@ -45,6 +54,8 @@ def _render(request: Request, status_code: int = 200, **ctx) -> HTMLResponse:
         "certainty_labels": CERTAINTY_LABELS,
         "certainty_icons": CERTAINTY_ICONS,
         "condition_labels": CONDITION_LABELS,
+        "donation_status": DonationStatus,
+        "step_status": StepStatus,
         "max_mb": MAX_UPLOAD_BYTES // (1024 * 1024),
     }
     return templates.TemplateResponse(request, "scan.html", {**base, **ctx}, status_code=status_code)
@@ -74,23 +85,23 @@ async def scan_submit(
         return _render(request, status_code=422, error=str(e))
 
     try:
-        ai = classifier.classify(image, note=note.strip() or None, filename=photo.filename)
+        outcome = _pipeline(classifier).run(image, note=note.strip() or None, filename=photo.filename)
     except ClassifierUnavailable as e:
         return _render(request, status_code=503, error=str(e))
 
-    result = apply_guardrails(ai, demo=classifier.is_demo)
-    log.info("scan category=%s certainty=%s action=%s demo=%s", result.primary_category, result.certainty, result.recommended_action, result.demo)
-    return _render(request, result=result)
+    log.info("scan category=%s certainty=%s action=%s demo=%s", outcome.scan.primary_category, outcome.scan.certainty,
+             outcome.scan.recommended_action, outcome.scan.demo)
+    return _render(request, result=outcome.scan, pipeline=outcome)
 
 
 @router.post("/scan/condition", response_class=HTMLResponse)
-async def scan_condition(request: Request, result_json: str = Form(...), condition: str = Form(...)) -> HTMLResponse:
-    # The previous result travels in the form. It's validated again here, and a
-    # tampered value only changes the sender's own page.
+async def scan_condition(request: Request, pipeline_json: str = Form(...), condition: str = Form(...)) -> HTMLResponse:
+    # The previous result travels in the form. It's validated again here, re-checked by
+    # the guardrails and the Safety Review, and a tampered value only changes the sender's own page.
     try:
-        previous = ScanResult.model_validate_json(result_json)
+        previous = PipelineResult.model_validate_json(pipeline_json)
         chosen = Condition(condition)
     except (ValidationError, ValueError):
         return _render(request, status_code=422, error="Something went wrong with that answer. Please scan the item again.")
-    previous = apply_guardrails(previous, demo=previous.demo)  # re-check safety on the returned data
-    return _render(request, result=apply_condition(previous, chosen), condition=chosen)
+    outcome = _pipeline(None).rerun_with_condition(previous, chosen)  # no AI call needed
+    return _render(request, result=outcome.scan, pipeline=outcome, condition=chosen)

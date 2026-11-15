@@ -24,6 +24,11 @@ STANDARD_WARNINGS = {
 }
 
 
+def item_unclear(scan: AIClassification) -> bool:
+    """True when we don't know what the item is (as opposed to knowing it but needing its condition)."""
+    return not scan.item_detected or scan.certainty == Certainty.UNSURE or scan.primary_category == WasteCategory.UNSURE
+
+
 def apply_guardrails(ai: AIClassification, demo: bool = False) -> ScanResult:
     # Start from the AI fields only, so re-checking a returned ScanResult recomputes everything.
     result = ScanResult(**ai.model_dump(include=set(AIClassification.model_fields)), demo=demo)
