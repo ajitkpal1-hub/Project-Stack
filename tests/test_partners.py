@@ -117,6 +117,34 @@ def test_osm_geo_handles_errors_and_caches(monkeypatch):
 
 # ---------- search ----------
 
+def test_overpass_tries_mirror_on_refusal_and_remembers_outages(monkeypatch):
+    urls = []
+
+    def refuse_then_ok(url, data=None, headers=None, timeout=None):
+        urls.append(url)
+        if len(urls) == 1:
+            raise httpx.ConnectError("refused")
+        return httpx.Response(200, json={"elements": []})
+
+    monkeypatch.setattr(httpx, "post", refuse_then_ok)
+    assert OsmGeo().nearby(DOMBIVLI, None) == [] and len(urls) == 2
+
+    calls = []
+
+    def slow(url, data=None, headers=None, timeout=None):
+        calls.append(timeout)
+        raise httpx.ReadTimeout("slow")
+
+    monkeypatch.setattr(httpx, "post", slow)
+    geo = OsmGeo()
+    with pytest.raises(GeoUnavailable, match="slow"):
+        geo.nearby(DOMBIVLI, WasteCategory.DRY)
+    assert calls == [8.0]  # one short attempt, no second wait
+    with pytest.raises(GeoUnavailable):
+        geo.nearby(GeoPoint(latitude=19.0, longitude=73.0, label="x"), None)
+    assert len(calls) == 1  # outage remembered: no new request
+
+
 def test_search_puts_verified_first_and_labels_map_results():
     repo = InMemoryPartnerRepo()
     repo.insert_verified(pform())

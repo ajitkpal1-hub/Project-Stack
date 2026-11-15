@@ -23,6 +23,9 @@ log = logging.getLogger("reloop.geo")
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_MIRRORS = [OVERPASS_URL, "https://overpass.kumi.systems/api/interpreter"]
+OVERPASS_TIMEOUT_S = 8.0  # the page must not hang on a slow public server
+OUTAGE_TTL_S = 300  # after a failure, skip the map for a few minutes instead of making every visitor wait
 DEFAULT_USER_AGENT = "RELOOP-AI/0.1"
 SEARCH_RADIUS_M = 15000
 CACHE_TTL_S = 3600
@@ -77,7 +80,7 @@ def overpass_query(lat: float, lon: float, material: WasteCategory | None, radiu
     if material in {None, WasteCategory.UNSURE, WasteCategory.REUSE, WasteCategory.E_WASTE}:
         parts.append(f'nwr["craft"="electronics_repair"]{around};')
         parts.append(f'nwr["repair_cafe"="yes"]{around};')
-    return f"[out:json][timeout:20];({''.join(parts)});out center tags 60;"
+    return f"[out:json][timeout:8];({''.join(parts)});out center tags 60;"
 
 
 def _kind_label(tags: dict[str, str]) -> str:
@@ -124,6 +127,7 @@ class OsmGeo:
         self._cache: dict[tuple, tuple[float, object]] = {}
         self._lock = threading.Lock()
         self._last_nominatim = 0.0
+        self._overpass_down_until = 0.0
 
     def _cached(self, key: tuple):
         hit = self._cache.get(key)
@@ -172,16 +176,27 @@ class OsmGeo:
         cached = self._cached(key)
         if cached is not None:
             return cached
-        try:
-            r = httpx.post(OVERPASS_URL, data={"data": overpass_query(point.latitude, point.longitude, material)},
-                           headers=self._headers, timeout=self._timeout + 10)
-        except httpx.HTTPError:
-            log.error("overpass connection error")
-            raise GeoUnavailable("We couldn't reach the map service. Showing our own directory only.") from None
-        if r.status_code != 200:
+        if time.monotonic() < self._overpass_down_until:
+            raise GeoUnavailable("The map service is slow right now. Showing our own directory only.")
+        query = overpass_query(point.latitude, point.longitude, material)
+        data = None
+        for url in OVERPASS_MIRRORS:
+            try:
+                r = httpx.post(url, data={"data": query}, headers=self._headers, timeout=OVERPASS_TIMEOUT_S)
+            except httpx.TimeoutException:
+                log.error("overpass timeout")
+                break  # a slow server: don't make the visitor wait for a second one
+            except httpx.HTTPError:
+                log.error("overpass connection error")
+                continue  # refused straight away: try the next mirror
+            if r.status_code == 200:
+                data = r.json()
+                break
             log.error("overpass error status=%s", r.status_code)
-            raise GeoUnavailable("The map service is busy. Showing our own directory only.")
-        places = parse_overpass(r.json(), point)
+        if data is None:
+            self._overpass_down_until = time.monotonic() + OUTAGE_TTL_S
+            raise GeoUnavailable("The map service is slow right now. Showing our own directory only.")
+        places = parse_overpass(data, point)
         self._store(key, places)
         return places
 
