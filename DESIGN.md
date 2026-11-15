@@ -164,22 +164,23 @@ Each lane colour is a fill with its own text colour, and every pairing passed WC
 
 ## Typography
 
-**Display Font:** Big Shoulders Stencil, variable 100–900, self-hosted (with Arial Narrow, sans-serif)
-**Body Font:** Mukta 400/500/700, self-hosted (with system-ui, Segoe UI, sans-serif)
+**Display Font:** Big Shoulders Stencil, variable 100–900, self-hosted (with Arial Narrow, sans-serif). Logo and bin labels only.
+**Body and Heading Font:** Mukta 400/500/700, self-hosted (with system-ui, Segoe UI, sans-serif)
 
-**Character:** A condensed municipal stencil, the lettering sprayed on a bin or a road, set against a warm, highly legible Indic-friendly sans.
+**Character:** Warm, highly legible Indic-friendly sans for everything people read; the condensed municipal stencil survives only where it is painted on a bin (lane names) and in the wordmark.
 
 ### Hierarchy
-- **Hero** (800, clamp(3rem, 9.2vw, 6rem), 0.9, uppercase): the homepage headline only, one line per span.
-- **Display** (800, clamp(2.5rem, 6vw, 4.25rem), 0.95, uppercase): page titles on feature pages, the "why" statement.
-- **Headline** (800, clamp(2rem, 4.2vw, 3rem), 1, uppercase): section headings.
-- **Display-3** (800, 1.75rem, 1.05, uppercase): panel headings and the wordmark.
+- **Hero** (Mukta 700, clamp(2.25rem, 6.5vw, 4.25rem), 1.08, sentence case): the homepage headline only.
+- **Display** (Mukta 700, clamp(2rem, 5vw, 3.25rem), 1.1): page titles, the "why" statement.
+- **Headline** (Mukta 700, clamp(1.625rem, 3.5vw, 2.25rem), 1.15): section headings.
+- **Display-3** (Mukta 700, 1.375rem, 1.25): panel headings.
 - **Title** (Mukta 700, 1.1875rem, 1.3): h3 inside rows, steps, chits; also the button face at 1.0625rem.
 - **Body** (Mukta 400, 1.0625rem, 1.6): running text. Ledes 1.1875rem in soft ink, capped at 40–42rem.
 - **Label** (Mukta 700, 0.75rem, 0.02em): tags. Footer column headings use Mukta 700 0.875rem in sentence case.
+- **Bin label** (Big Shoulders Stencil 800, uppercase): lane names on bins and chips, the page bin, the result bin, the wordmark.
 
 ### Named Rules
-**The Stencil Is For Names Rule.** The stencil face sets headings, lane names, step numbers, stamps and the wordmark, always uppercase and weight 800. It never sets sentences longer than a headline, form labels or body copy.
+**The Stencil Is For Bins Rule.** The stencil face sets only lane names on bins and chips and the wordmark, always uppercase and weight 800. Headings, numbers, stamps, form labels and body copy use Mukta in sentence case. (Changed 2026-11-15: the stencil headings were hard to read.)
 
 **The Sentence-Case Small Type Rule.** Small Mukta labels stay sentence case. No uppercase tracked micro-labels above headings.
 
@@ -235,7 +236,7 @@ Eight bin-shaped links in lane colours, a darker lid band across the top, a sten
 Three 18px green icons: filled circle (Clear), half-filled (Likely), hollow (Unsure, so we ask). Always paired with the word.
 
 ### Stamps
-Listing status as a rubber stamp: stencil uppercase, 2.5px current-colour border, 6px radius, rotated −6°. Available green, Reserved blue, Pending orange, Completed soft ink, Rejected red.
+Listing status as a rubber stamp: Mukta 700 in sentence case, 2.5px current-colour border, 6px radius, rotated −6°. Available green, Reserved blue, Pending orange, Completed soft ink, Rejected red.
 
 ### Hazard strip
 Full-width hazard red band between main and footer, white text with an alert icon and a bold white link. Identical on every page.
@@ -260,7 +261,7 @@ One family drawn on a 24px grid: 1.75 stroke, round caps and joins, `currentColo
 - **Don't** show certainty as a percentage, score or progress bar.
 - **Don't** introduce a second accent colour or use lane colours as decorative tints or gradients.
 - **Don't** put white text on Biomedical Yellow.
-- **Don't** set body copy, form labels or long sentences in the stencil face.
+- **Don't** use the stencil face for headings, numbers, statuses, body copy or form labels. It is for bin labels and the wordmark only.
 - **Don't** add uppercase tracked eyebrow labels above headings.
 - **Don't** add drop shadows to panels, buttons or bins; only paper objects lift (the inset bin lid is not a drop shadow).
 - **Don't** animate on load or scroll, or add motion beyond press feedback.
