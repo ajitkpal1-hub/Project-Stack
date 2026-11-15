@@ -64,7 +64,7 @@
         </div>
         <label class="field">
           <span>{{ _('Photo (optional)') }}</span>
-          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" data-shrink>
           <small>{{ _('One JPG, PNG or WEBP up to %(mb)s MB. We remove hidden location data from the photo.', mb=max_mb) }}</small>
         </label>
         <button class="btn btn-primary" type="submit" {% if not ready %}disabled{% endif %}>{{ _('Send for review') }} {{ icon('arrow', 18) }}</button>

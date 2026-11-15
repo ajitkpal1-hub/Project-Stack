@@ -211,7 +211,8 @@ def test_loading_card_shows_while_scanning_and_assistant_works(app, new_page, tm
     photo.write_bytes(make_image())
     page = new_page(390)
     page.goto(f"{app.url}/scan")
-    page.evaluate(hold)  # keep the page here so the in-progress state can be checked
+    # keep the page here so the in-progress state can be checked (the scan form sends via form.submit())
+    page.evaluate("() => { HTMLFormElement.prototype.submit = function () { document.body.dataset.submitted = '1'; }; }")
     page.set_input_files("form.chute input[name=photo]", str(photo))
     page.wait_for_selector(".loading:not([hidden])", timeout=3000)
     assert page.inner_text(".loading-title") == "Scanning your photo"
@@ -230,3 +231,49 @@ def test_loading_card_shows_while_scanning_and_assistant_works(app, new_page, tm
 
     page.goto(f"{app.url}/scan")  # a fresh page has no loading card showing
     assert not page.is_visible(".loading")
+
+
+
+def _big_camera_photo(path):
+    import io
+    import os
+
+    from PIL import Image
+    img = Image.frombytes("RGB", (4000, 3000), os.urandom(4000 * 3000 * 3))  # noise: compresses badly, like a real photo
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=92)
+    path.write_bytes(buf.getvalue())
+    return len(buf.getvalue())
+
+
+def test_big_phone_photo_is_shrunk_before_upload(app, browser, tmp_path):
+    photo = tmp_path / "IMG_20261115_101500.jpg"
+    size = _big_camera_photo(photo)
+    assert size > 8 * 1024 * 1024  # bigger than the host's upload limit
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    try:
+        page = ctx.new_page()
+        page.goto(f"{app.url}/scan")
+        page.evaluate("""() => { HTMLFormElement.prototype.submit = function () {
+            var f = this.querySelector('input[name=camera]').files[0];
+            document.body.dataset.sent = f.size + ' ' + f.type; }; }""")
+        page.set_input_files("form.chute input[name=camera]", str(photo))
+        page.wait_for_selector("body[data-sent]", timeout=15000)
+        sent_size, sent_type = page.get_attribute("body", "data-sent").split()
+        assert sent_type == "image/jpeg" and int(sent_size) < 1024 * 1024  # under 1 MB, far below the limit
+    finally:
+        ctx.close()
+
+
+def test_big_phone_photo_scans_successfully(app, browser, tmp_path):
+    photo = tmp_path / "IMG_20261115_101501.jpg"
+    _big_camera_photo(photo)
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    try:
+        page = ctx.new_page()
+        page.goto(f"{app.url}/scan")
+        with page.expect_navigation(timeout=30000):
+            page.set_input_files("form.chute input[name=camera]", str(photo))
+        assert page.is_visible("#result-title") and "larger than 4 MB" not in page.content()
+    finally:
+        ctx.close()

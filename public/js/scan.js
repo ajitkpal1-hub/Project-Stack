@@ -61,8 +61,46 @@ function hideLoading() {
   document.querySelectorAll("form.is-busy").forEach(function (f) { f.classList.remove("is-busy"); });
 }
 
+// Phone cameras save 4-12 MB photos, but uploads over ~4.5 MB are refused by the host.
+// Shrink the photo on the phone first: a 1600 px JPEG is sharp enough and uploads fast.
+var MAX_SIDE = 1600, MAX_BYTES = 4 * 1024 * 1024;
+
+function shrinkInto(input) {
+  var file = input.files && input.files[0];
+  if (!file || !window.createImageBitmap || !window.DataTransfer) return Promise.resolve(file);
+  return createImageBitmap(file, { imageOrientation: "from-image" }).then(function (bitmap) {
+    var scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size < 1024 * 1024 && file.type === "image/jpeg") return file;  // already small
+    var canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    return new Promise(function (resolve) {
+      canvas.toBlob(function (blob) {
+        if (!blob) { resolve(file); return; }
+        var small = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        var list = new DataTransfer(); list.items.add(small); input.files = list.files;
+        resolve(small);
+      }, "image/jpeg", 0.85);
+    });
+  }).catch(function () { return file; });  // can't read it here (e.g. HEIC): send as is
+}
+
+function photoError(form, message) {
+  var box = form.querySelector(".photo-error");
+  if (!box) {
+    box = document.createElement("p");
+    box.className = "notice notice--error photo-error";
+    box.setAttribute("role", "alert");
+    form.insertBefore(box, form.firstChild);
+  }
+  box.textContent = message;
+}
+
+var TOO_BIG = "That photo is too large to send. Please try again, or choose a smaller photo.";
+
 document.addEventListener("DOMContentLoaded", function () {
-  // Photo pickers: start the scan as soon as a photo is chosen.
+  // Photo pickers: shrink the photo, then start the scan straight away.
   document.querySelectorAll("form.chute").forEach(function (form) {
     var inputs = form.querySelectorAll("input[type=file]");
     inputs.forEach(function (input) {
@@ -70,9 +108,22 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!input.files || !input.files.length) return;
         inputs.forEach(function (other) { if (other !== input) other.value = ""; });  // send one photo only
         form.classList.add("is-ready");
-        if (form.hasAttribute("data-autosubmit")) {
-          if (form.requestSubmit) form.requestSubmit(); else { form.classList.add("is-busy"); showLoading("scan"); form.submit(); }
-        }
+        if (!form.hasAttribute("data-autosubmit")) { shrinkInto(input); return; }
+        form.classList.add("is-busy");
+        showLoading("scan");
+        shrinkInto(input).then(function (file) {
+          if (file && file.size > MAX_BYTES) { hideLoading(); input.value = ""; photoError(form, TOO_BIG); return; }
+          form.submit();  // the loading card is already showing
+        });
+      });
+    });
+  });
+
+  // Other photo fields (donation photo): shrink as soon as one is chosen.
+  document.querySelectorAll("input[type=file][data-shrink]").forEach(function (input) {
+    input.addEventListener("change", function () {
+      shrinkInto(input).then(function (file) {
+        if (file && file.size > MAX_BYTES) { input.value = ""; photoError(input.form, TOO_BIG); }
       });
     });
   });

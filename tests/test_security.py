@@ -61,7 +61,7 @@ def test_templates_have_no_inline_scripts_or_styles(client):
         html = client.get(path).text.lower()
         inline_scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>", html)
         assert not inline_scripts and " style=" not in html and "javascript:" not in html and " onclick=" not in html, path
-        assert re.findall(r'<script src="([^"]+)"', html) == ["/js/scan.js?v=0.2.1"], path  # our own file only
+        assert re.findall(r'<script src="([^"]+)"', html) == ["/js/scan.js?v=0.2.2"], path  # our own file only
 
 
 # ---------- uploads ----------
