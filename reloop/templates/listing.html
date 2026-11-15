@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, stamp, form_error %}
+{% block title %}{{ view.listing.title if view else _('Listing not found') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{% if not view %}
+{{ page_head(_('Listing not found'), _("This item may have been handed over, or it isn't public yet."), 'textile', 'GONE') }}
+<section class="section section--tight"><div class="wrap">
+  {{ form_error(error) }}
+  <a class="btn btn-primary" href="/donations">{{ _('Browse other items') }} {{ icon('arrow', 18) }}</a>
+</div></section>
+{% else %}
+{% set x = view.listing %}
+{{ page_head(x.title, _(category_labels[x.category]) ~ ' · ' ~ x.locality ~ ', ' ~ x.pin_code, 'textile', 'TEXTILE' if x.category.value == 'clothes' else 'REUSE') }}
+
+<section class="section section--tight">
+  <div class="wrap feature-grid">
+    <article class="panel listing-detail">
+      <div class="chit-head">{{ stamp(x.status, status_labels) }}</div>
+      {% if view.photo_url %}<img class="listing-photo" src="{{ view.photo_url }}" alt="{{ _('Photo of %(t)s', t=x.title) }}">{% endif %}
+      <dl class="chit-fields">
+        <div><dt>{{ _('Category') }}</dt><dd>{{ _(category_labels[x.category]) }}</dd></div>
+        <div><dt>{{ _('Donor says') }}</dt><dd>{{ _(condition_labels[x.condition]) }}</dd></div>
+        <div><dt>{{ _('Area') }}</dt><dd>{{ x.locality }}, {{ x.pin_code }}</dd></div>
+      </dl>
+      {% if x.description %}<p class="listing-desc">{{ x.description }}</p>{% endif %}
+      <p class="fineprint">{{ _('The condition is what the donor told us. RELOOP has not inspected the item. Check it at handover.') }}</p>
+    </article>
+
+    <div class="panel panel--soon">
+      {% if viewer.user and viewer.user.id == x.donor_id %}
+      <h2 class="display-3">{{ _('This is your listing') }}</h2>
+      <p>{{ _('Manage requests for it in your dashboard.') }}</p>
+      <a class="btn btn-primary" href="/dashboard">{{ _('Go to my dashboard') }} {{ icon('arrow', 18) }}</a>
+      {% elif x.status != statuses.AVAILABLE %}
+      <h2 class="display-3">{{ _('Not available right now') }}</h2>
+      <p>{{ _('This item is reserved for someone else.') }}</p>
+      {% elif existing %}
+      <h2 class="display-3">{{ _("You've asked for this") }}</h2>
+      <p>{{ _('Status:') }} <strong>{{ _(request_labels[existing.status]) }}</strong></p>
+      <a class="btn btn-quiet" href="/dashboard">{{ _('See it in my dashboard') }}</a>
+      {% elif viewer.signed_in %}
+      <h2 class="display-3">{{ _('Ask for this item') }}</h2>
+      <form class="form-stack" action="/donations/{{ x.id }}/request" method="post">
+        {{ csrf_field(request) }}
+        <label class="field">
+          <span>{{ _('A short note to the donor (optional)') }}</span>
+          <textarea name="message" maxlength="500" rows="3" placeholder="{{ _('e.g. For my daughter starting school. I can collect this weekend.') }}"></textarea>
+          <small>{{ _("Don't share your phone number here. If the donor approves, you'll both see each other's private contact note.") }}</small>
+        </label>
+        <button class="btn btn-primary" type="submit">{{ icon('gift', 18) }} {{ _('Request this item') }}</button>
+      </form>
+      {% else %}
+      <h2 class="display-3">{{ _('Want this item?') }}</h2>
+      <p>{{ _('Log in to send the donor a request.') }}</p>
+      <a class="btn btn-primary" href="{{ login_link }}">{{ _('Log in to request') }} {{ icon('arrow', 18) }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

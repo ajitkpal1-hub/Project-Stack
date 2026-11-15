@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, chit, form_error, not_ready %}
+{% set page = pages_by_slug['donations'] %}
+{% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
+{% block description %}{{ _(page.purpose) }}{% endblock %}
+
+{% block main %}
+{{ page_head(_(page.title), _(page.purpose), 'textile', 'TEXTILE') }}
+
+<section class="section section--tight">
+  <div class="wrap">
+    {{ not_ready(ready) }}
+    {{ form_error(error) }}
+    <form class="filter-bar" action="/donations" method="get" role="search">
+      <label class="field">
+        <span>{{ _('Category') }}</span>
+        <select name="category">
+          <option value="">{{ _('All categories') }}</option>
+          {% for c, label in category_labels.items() %}
+          <option value="{{ c.value }}" {% if category == c.value %}selected{% endif %}>{{ _(label) }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">
+        <span>{{ _('Locality or PIN code') }}</span>
+        <input name="place" value="{{ place }}" maxlength="60" placeholder="{{ _('e.g. Kalyan West or 421301') }}">
+      </label>
+      <button class="btn btn-primary" type="submit">{{ _('Search') }} {{ icon('arrow', 18) }}</button>
+    </form>
+
+    {% if listings %}
+    <p class="result-count">{{ _('%(n)s item(s) found', n=listings|length) }}</p>
+    <div class="chit-grid">
+      {% for view in listings %}{{ chit(view, category_labels, condition_labels, status_labels) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <h2 class="display-3">{% if category or place %}{{ _('Nothing matches that search yet') }}{% else %}{{ _('No items listed yet') }}{% endif %}</h2>
+      <p>{{ _('Approved listings appear here. Be the first to give something a second life.') }}</p>
+      <a class="btn btn-primary" href="/donate">{{ icon('gift', 18) }} {{ _('Donate an item') }}</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

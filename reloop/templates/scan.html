@@ -128,7 +128,7 @@
 
           <div class="next-actions">
             {% if pipeline.donation and pipeline.donation.status == donation_status.ELIGIBLE %}
-            <a class="btn btn-primary" href="/donate">{{ icon('gift', 18) }} {{ _('List it for donation') }}</a>
+            <a class="btn btn-primary" href="/donate?title={{ result.identified_item|urlencode }}&amp;lane={{ result.primary_category.value }}&amp;condition=works_clean">{{ icon('gift', 18) }} {{ _('List it for donation') }}</a>
             {% endif %}
             {% if result.recommended_action.value in ['special_handling', 'recycle', 'dispose'] %}
             <a class="btn btn-quiet" href="/centres">{{ icon('pin', 18) }} {{ _('Find a collection point') }}</a>

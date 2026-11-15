@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, stamp, form_error %}
+{% block title %}{{ _('Admin queue') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{{ page_head(_('Admin queue'), _('Approve or reject new donation listings before they go public.'), 'hazardous', 'ADMIN') }}
+
+<section class="section section--tight">
+  <div class="wrap dash">
+    {{ form_error(error) }}
+    {% if queue is none %}
+    <p class="notice notice--error">{{ icon('alert', 18) }} {{ _("This page is only for RELOOP admins. Your account doesn't have admin access.") }}</p>
+    {% elif not queue %}
+    <p class="empty-line">{{ icon('check', 18) }} {{ _('Nothing waiting for review.') }}</p>
+    {% else %}
+    <p class="result-count">{{ _('%(n)s listing(s) waiting', n=queue|length) }}</p>
+    <div class="dash-list">
+      {% for lv in queue %}
+      {% set x = lv.listing %}
+      <article class="dash-item admin-item">
+        <div class="chit-head"><h3 class="chit-title">{{ x.title }}</h3>{{ stamp(x.status, status_labels) }}</div>
+        {% if lv.photo_url %}<img class="admin-photo" src="{{ lv.photo_url }}" alt="{{ _('Photo of %(t)s', t=x.title) }}" loading="lazy">{% endif %}
+        <p class="dash-meta">{{ _(category_labels[x.category]) }} · {{ _(condition_labels[x.condition]) }} · {{ x.locality }}, {{ x.pin_code }}</p>
+        {% if x.description %}<p class="listing-desc">{{ x.description }}</p>{% endif %}
+        <ul class="checklist admin-checks">
+          <li>{{ icon('alert', 16) }}<span>{{ _('No hazardous or medical items (medicines, sharps, chemicals, batteries on their own).') }}</span></li>
+          <li>{{ icon('alert', 16) }}<span>{{ _('No phone numbers, emails or exact addresses in the text or photo.') }}</span></li>
+        </ul>
+        <div class="action-row admin-actions">
+          <form class="inline-form" action="/admin/listings/{{ x.id }}/approve" method="post">{{ csrf_field(request) }}
+            <button class="btn btn-primary btn-small" type="submit">{{ icon('check', 16) }} {{ _('Approve') }}</button></form>
+          <form class="inline-form reject-form" action="/admin/listings/{{ x.id }}/reject" method="post">{{ csrf_field(request) }}
+            <label class="field"><span class="visually-hidden">{{ _('Reason for rejecting') }}</span>
+              <input name="reason" maxlength="300" placeholder="{{ _('Reason the donor will see') }}"></label>
+            <button class="btn btn-quiet btn-small" type="submit">{{ _('Reject') }}</button></form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

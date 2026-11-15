@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, stamp, form_error, not_ready %}
+{% block title %}{{ _('My dashboard') }} | RELOOP AI{% endblock %}
+
+{% macro action(url, label, cls='btn-quiet') -%}
+<form class="inline-form" action="{{ url }}" method="post">{{ csrf_field(request) }}<button class="btn {{ cls }} btn-small" type="submit">{{ label }}</button></form>
+{%- endmacro %}
+
+{% block main %}
+{{ page_head(_('My dashboard'), _('Your listings, the requests on them, and the items you have asked for.'), 'unsure', 'MINE') }}
+
+<section class="section section--tight">
+  <div class="wrap dash">
+    {{ not_ready(ready) }}
+    {{ form_error(error) }}
+    {% if board %}
+    {% set p = board.profile %}
+    {% if not p or not p.locality or not p.contact_note %}
+    <p class="notice">{{ icon('alert', 18) }} {{ _('Finish your profile: add your locality and a private contact note, so the people you approve can reach you.') }}
+      <a href="/account">{{ _('Edit profile') }}</a></p>
+    {% endif %}
+
+    <div class="dash-head">
+      <h2 class="display-2">{{ _('My listings') }}</h2>
+      <a class="btn btn-primary" href="/donate">{{ icon('gift', 18) }} {{ _('Donate an item') }}</a>
+    </div>
+    {% if not board.listings %}
+    <p class="empty-line">{{ _("You haven't listed anything yet.") }}</p>
+    {% endif %}
+    <div class="dash-list">
+      {% for lv in board.listings %}
+      {% set x = lv.listing %}
+      <article class="dash-item">
+        <div class="chit-head">
+          <h3 class="chit-title">{% if x.status in [statuses.AVAILABLE, statuses.RESERVED] %}<a href="/donations/{{ x.id }}">{{ x.title }}</a>{% else %}{{ x.title }}{% endif %}</h3>
+          {{ stamp(x.status, status_labels) }}
+        </div>
+        <p class="dash-meta">{{ _(category_labels[x.category]) }} · {{ x.locality }}, {{ x.pin_code }}</p>
+        {% if x.status == statuses.PENDING_REVIEW %}<p class="dash-note">{{ _('Waiting for a quick admin review before it goes public.') }}</p>{% endif %}
+        {% if x.status == statuses.REJECTED %}<p class="dash-note dash-note--bad">{{ _('Not approved:') }} {{ x.rejection_reason }}</p>{% endif %}
+
+        {% if lv.requests %}
+        <h4>{{ _('Requests') }}</h4>
+        <ul class="req-list">
+          {% for rv in lv.requests %}
+          {% set r = rv.request %}
+          <li class="req req--{{ r.status.value }}">
+            <div><strong>{{ rv.requester_name }}</strong> <span class="req-status">{{ _(request_labels[r.status]) }}</span></div>
+            {% if r.message %}<p class="req-msg">"{{ r.message }}"</p>{% endif %}
+            {% if rv.contact_note is not none %}
+            <p class="contact-box">{{ icon('check', 16) }} <span><strong>{{ _('Their contact note:') }}</strong> {{ rv.contact_note or _("They haven't added one yet. Ask them to add it in their profile.") }}</span></p>
+            {% endif %}
+            {% if r.status == request_statuses.PENDING and x.status == statuses.AVAILABLE %}
+            <div class="action-row">
+              {{ action('/dashboard/requests/' ~ r.id ~ '/approve', _('Approve'), 'btn-primary') }}
+              {{ action('/dashboard/requests/' ~ r.id ~ '/decline', _('Decline')) }}
+            </div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% elif x.status == statuses.AVAILABLE %}
+        <p class="dash-note">{{ _('No requests yet.') }}</p>
+        {% endif %}
+
+        <div class="action-row">
+          {% if x.status == statuses.RESERVED %}
+          {{ action('/dashboard/listings/' ~ x.id ~ '/complete', _('Mark as handed over'), 'btn-primary') }}
+          {{ action('/dashboard/listings/' ~ x.id ~ '/cancel', _('Cancel reservation')) }}
+          {% elif x.status in [statuses.PENDING_REVIEW, statuses.AVAILABLE, statuses.REJECTED] %}
+          {{ action('/dashboard/listings/' ~ x.id ~ '/delete', _('Remove listing')) }}
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    <h2 class="display-2 dash-section">{{ _("Items I've asked for") }}</h2>
+    {% if not board.requests %}
+    <p class="empty-line">{{ _('No requests yet.') }} <a href="/donations">{{ _('Explore donations') }}</a></p>
+    {% endif %}
+    <div class="dash-list">
+      {% for mv in board.requests %}
+      {% set r = mv.request %}
+      <article class="dash-item">
+        <div class="chit-head">
+          <h3 class="chit-title">{{ mv.listing.title if mv.listing else _('Removed listing') }}</h3>
+          <span class="req-status">{{ _(request_labels[r.status]) }}</span>
+        </div>
+        {% if mv.listing %}<p class="dash-meta">{{ _('From') }} {{ mv.donor_name }} · {{ mv.listing.locality }}, {{ mv.listing.pin_code }}</p>{% endif %}
+        {% if mv.donor_contact is not none %}
+        <p class="contact-box">{{ icon('check', 16) }} <span><strong>{{ _("Donor's contact note:") }}</strong> {{ mv.donor_contact or _("The donor hasn't added one yet. Check back soon.") }}</span></p>
+        {% endif %}
+        {% if r.status in [request_statuses.PENDING, request_statuses.APPROVED] %}
+        <div class="action-row">{{ action('/dashboard/requests/' ~ r.id ~ '/withdraw', _('Withdraw request')) }}</div>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

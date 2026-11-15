@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error, not_ready %}
+{% set is_login = mode == 'login' %}
+{% block title %}{{ _('Log in') if is_login else _('Create an account') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{{ page_head(_('Log in') if is_login else _('Create an account'),
+             _('Log in to list donations, request items and track them in your dashboard.') if is_login
+             else _('An account lets you list items to donate and request things neighbours are giving away.'),
+             'reuse', 'HELLO') }}
+
+<section class="section section--tight">
+  <div class="wrap feature-grid">
+    <div class="panel">
+      {{ not_ready(ready) }}
+      {% if notice %}<p class="notice notice--ok" role="status">{{ icon('check', 18) }} {{ notice }}</p>{% endif %}
+      {{ form_error(error) }}
+      <form class="form-stack" action="{{ '/account/login' if is_login else '/account/signup' }}" method="post">
+        {{ csrf_field(request) }}
+        <input type="hidden" name="next" value="{{ next }}">
+        <label class="field">
+          <span>{{ _('Email') }}</span>
+          <input type="email" name="email" value="{{ email or '' }}" required autocomplete="email" maxlength="254">
+        </label>
+        <label class="field">
+          <span>{{ _('Password') }}</span>
+          <input type="password" name="password" required minlength="{{ min_password }}" maxlength="72"
+                 autocomplete="{{ 'current-password' if is_login else 'new-password' }}">
+          {% if not is_login %}<small>{{ _('At least %(n)s characters.', n=min_password) }}</small>{% endif %}
+        </label>
+        <button class="btn btn-primary" type="submit" {% if not ready %}disabled{% endif %}>
+          {{ _('Log in') if is_login else _('Create account') }} {{ icon('arrow', 18) }}
+        </button>
+      </form>
+      <p class="form-switch">
+        {% if is_login %}{{ _('New here?') }} <a href="/account/signup?next={{ next|urlencode }}">{{ _('Create an account') }}</a>
+        {% else %}{{ _('Already have an account?') }} <a href="/account/login?next={{ next|urlencode }}">{{ _('Log in') }}</a>{% endif %}
+      </p>
+    </div>
+    <div class="panel panel--soon">
+      <h2 class="display-3">{{ _('Your privacy') }}</h2>
+      <ul class="checklist">
+        <li>{{ icon('check', 18) }}<span>{{ _('Your email is never shown to anyone.') }}</span></li>
+        <li>{{ icon('check', 18) }}<span>{{ _('Listings show your area and PIN code, never your address.') }}</span></li>
+        <li>{{ icon('check', 18) }}<span>{{ _('Your contact note is shared only with the one person whose request you approve.') }}</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

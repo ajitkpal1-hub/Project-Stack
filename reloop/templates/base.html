@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="/css/site.css?v={{ app_version }}">
 </head>
 <body>
+  {% set me = current_viewer(request) %}
+  {% set fl = take_flash(request) %}
   <a class="skip" href="#main">{{ _('Skip to content') }}</a>
 
   <header class="site-header">
@@ -29,8 +31,14 @@
           {% endfor %}
         </ul>
         <div class="nav-account-group">
-          <a class="nav-admin" href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>{{ _('Admin') }}</a>
+          {% if me.user and me.user.is_admin %}<a class="nav-admin" href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>{{ _('Admin') }}</a>{% endif %}
+          {% if me.signed_in %}
           <a class="nav-account" href="/dashboard" {% if active == 'dashboard' %}aria-current="page"{% endif %}>{{ _('My dashboard') }}</a>
+          <form class="nav-logout" action="/account/logout" method="post">{{ csrf_field(request) }}<button type="submit" class="nav-admin">{{ _('Log out') }}</button></form>
+          {% else %}
+          <a class="nav-admin" href="/account/login">{{ _('Log in') }}</a>
+          <a class="nav-account" href="/account/signup">{{ _('Sign up') }}</a>
+          {% endif %}
         </div>
       </nav>
 
@@ -45,8 +53,15 @@
             {% for p in primary_nav %}
             <li><a href="{{ p.path }}" {% if active == p.slug %}aria-current="page"{% endif %}>{{ _(p.title) }}</a></li>
             {% endfor %}
+            {% if me.signed_in %}
             <li><a href="/dashboard" {% if active == 'dashboard' %}aria-current="page"{% endif %}>{{ _('My dashboard') }}</a></li>
-            <li><a href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>{{ _('Admin dashboard') }}</a></li>
+            <li><a href="/account">{{ _('My profile') }}</a></li>
+            {% if me.user.is_admin %}<li><a href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>{{ _('Admin queue') }}</a></li>{% endif %}
+            <li><form action="/account/logout" method="post">{{ csrf_field(request) }}<button type="submit" class="nav-mobile-button">{{ _('Log out') }}</button></form></li>
+            {% else %}
+            <li><a href="/account/login">{{ _('Log in') }}</a></li>
+            <li><a href="/account/signup">{{ _('Sign up') }}</a></li>
+            {% endif %}
           </ul>
         </nav>
       </details>
@@ -54,6 +69,9 @@
   </header>
 
   <main id="main">
+    {% if fl %}
+    <div class="wrap flash-wrap"><p class="notice {{ 'notice--error' if fl.k == 'error' else 'notice--ok' }}" role="status">{{ icon('alert' if fl.k == 'error' else 'check', 18) }} {{ fl.m }}</p></div>
+    {% endif %}
     {% block main %}{% endblock %}
   </main>
 
@@ -80,8 +98,13 @@
       <nav class="footer-nav" aria-label="{{ _('Account') }}">
         <h2>{{ _('Account') }}</h2>
         <ul>
+          {% if me.signed_in %}
           <li><a href="/dashboard">{{ _('My dashboard') }}</a></li>
-          <li><a href="/admin">{{ _('Admin') }}</a></li>
+          <li><a href="/account">{{ _('My profile') }}</a></li>
+          {% else %}
+          <li><a href="/account/login">{{ _('Log in') }}</a></li>
+          <li><a href="/account/signup">{{ _('Sign up') }}</a></li>
+          {% endif %}
         </ul>
       </nav>
       <p class="footer-note">{{ _('General guidance only. Always follow your local municipal collection instructions. RELOOP AI never asks for your phone number or address publicly.') }}</p>

@@ -4,12 +4,16 @@ import os
 import platform
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.exceptions import HTTPException
 
 from reloop import __version__
 from reloop.config import get_settings
 from reloop.models.categories import LANES
-from reloop.routes import assistant, pages, scan
+from reloop.routes import account, assistant, donations, pages, scan
+from reloop.routes.deps import LoginRequired, login_url, viewer
+from reloop.security import SessionMiddleware, csrf_field, take_flash
 from reloop.templating import templates
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -24,10 +28,28 @@ def create_app() -> FastAPI:
         pages_by_slug=pages.PAGES_BY_SLUG,
         app_version=__version__,
         lane_stencils={lane.category.value: lane.stencil for lane in LANES},
+        csrf_field=csrf_field,
+        current_viewer=viewer,
+        take_flash=take_flash,
     )
+    app.add_middleware(SessionMiddleware)
+    app.include_router(account.router)
+    app.include_router(donations.router)
     app.include_router(pages.router)
     app.include_router(scan.router)
     app.include_router(assistant.router)
+
+    @app.exception_handler(LoginRequired)
+    async def _login_required(request: Request, exc: LoginRequired) -> RedirectResponse:
+        return RedirectResponse(login_url(exc.next_path), status_code=303)
+
+    @app.exception_handler(HTTPException)
+    async def _http_error(request: Request, exc: HTTPException) -> HTMLResponse:
+        messages = {403: "Your form expired. Please go back, refresh the page and try again.",
+                    404: "We couldn't find that page.", 405: "That page can't be opened this way."}
+        message = messages.get(exc.status_code, "Something went wrong. Please try again.")
+        return templates.TemplateResponse(request, "error.html", {"active": "", "code": exc.status_code, "message": message},
+                                          status_code=exc.status_code)
 
     @app.get("/api/health")
     def health() -> dict:

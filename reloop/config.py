@@ -22,6 +22,23 @@ class Settings(BaseSettings):
     rag_top_k: int = 6
     rag_min_similarity: float = 0.35  # below this a passage is not treated as relevant
     maps_api_key: str = ""
+    admin_emails: str = ""  # comma-separated; these accounts can use the admin queue
+
+    @property
+    def admin_email_set(self) -> set[str]:
+        return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()}
+
+    @property
+    def anon_key_is_secret(self) -> bool:
+        """The public-key slot must never hold the secret key: that would switch off row-level security."""
+        anon = self.supabase_anon_key.strip()
+        return bool(anon) and (anon.startswith("sb_secret_") or anon == self.supabase_service_role_key.strip())
+
+    @property
+    def accounts_ready(self) -> bool:
+        if self.anon_key_is_secret:
+            return False
+        return bool(self.supabase_url.strip() and self.supabase_anon_key.strip() and self.supabase_service_role_key.strip())
 
     @property
     def llm_mode(self) -> str:
@@ -45,6 +62,9 @@ class Settings(BaseSettings):
             "llm": self.llm_mode == "mock" or bool(self.llm_mode == "anthropic" and self.llm_api_key.strip()),
             "embeddings": bool(self.embedding_provider.strip() and (self.embedding_api_key.strip() or self.embedding_provider.strip().lower() == "hash")),
             "maps": bool(self.maps_api_key),
+            "accounts": self.accounts_ready,
+            "admins_configured": bool(self.admin_email_set),
+            "anon_key_misconfigured": self.anon_key_is_secret,
         }
 
 

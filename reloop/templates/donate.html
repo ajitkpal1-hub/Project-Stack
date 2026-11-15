@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error, not_ready %}
+{% set page = pages_by_slug['donate'] %}
+{% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
+{% block description %}{{ _(page.purpose) }}{% endblock %}
+
+{% block main %}
+{{ page_head(_(page.title), _(page.purpose), 'reuse', 'REUSE') }}
+
+<section class="section section--tight">
+  <div class="wrap feature-grid">
+    <div class="panel">
+      {{ not_ready(ready) }}
+      {{ form_error(error) }}
+      {% if blocked %}<p><a class="btn btn-quiet" href="/scan">{{ icon('arrow', 18) }} {{ _('Scan it for safe disposal steps') }}</a></p>{% endif %}
+
+      {% if not viewer.signed_in %}
+      <h2 class="display-3">{{ _('Log in to list an item') }}</h2>
+      <p>{{ _('You need an account so people can request your item and you can approve them.') }}</p>
+      <p class="action-row">
+        <a class="btn btn-primary" href="{{ login_link }}">{{ _('Log in') }} {{ icon('arrow', 18) }}</a>
+        <a class="btn btn-quiet" href="/account/signup?next=/donate">{{ _('Create an account') }}</a>
+      </p>
+      {% else %}
+      {% if from_scan %}<p class="notice notice--ok">{{ icon('check', 18) }} {{ _("We've filled in what we could from your scan. Please check every field.") }}</p>{% endif %}
+      <form class="form-stack" action="/donate" method="post" enctype="multipart/form-data">
+        {{ csrf_field(request) }}
+        <label class="field">
+          <span>{{ _('What are you giving away?') }}</span>
+          <input name="title" value="{{ form.title or '' }}" required minlength="3" maxlength="80" placeholder="{{ _('e.g. Wooden study table') }}">
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>{{ _('Category') }}</span>
+            <select name="category" required>
+              <option value="">{{ _('Choose one') }}</option>
+              {% for c, label in category_labels.items() %}
+              <option value="{{ c.value }}" {% if form.category == c.value %}selected{% endif %}>{{ _(label) }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <fieldset class="field">
+            <legend>{{ _('Condition') }}</legend>
+            {% for c, label in condition_labels.items() %}
+            <label class="option"><input type="radio" name="condition" value="{{ c.value }}" required {% if form.condition == c.value %}checked{% endif %}> <span>{{ _(label) }}</span></label>
+            {% endfor %}
+          </fieldset>
+        </div>
+        <label class="field">
+          <span>{{ _('Details (optional)') }}</span>
+          <textarea name="description" maxlength="1000" rows="4" placeholder="{{ _('Size, age, anything missing, pickup times that suit you') }}">{{ form.description or '' }}</textarea>
+          <small>{{ _("Don't put your phone number or address here. Add them to your private contact note instead.") }}</small>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>{{ _('Locality') }}</span>
+            <input name="locality" value="{{ form.locality or '' }}" required minlength="2" maxlength="80" placeholder="{{ _('e.g. Thakurli East') }}">
+          </label>
+          <label class="field">
+            <span>{{ _('PIN code') }}</span>
+            <input name="pin_code" value="{{ form.pin_code or '' }}" required inputmode="numeric" pattern="[1-9][0-9]{5}" maxlength="6" placeholder="421201">
+          </label>
+        </div>
+        <label class="field">
+          <span>{{ _('Photo (optional)') }}</span>
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+          <small>{{ _('One JPG, PNG or WEBP up to %(mb)s MB. We remove hidden location data from the photo.', mb=max_mb) }}</small>
+        </label>
+        <button class="btn btn-primary" type="submit" {% if not ready %}disabled{% endif %}>{{ _('Send for review') }} {{ icon('arrow', 18) }}</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="panel panel--soon">
+      <h2 class="display-3">{{ _('How donating works') }}</h2>
+      <ol class="steps">
+        <li>{{ _('A RELOOP admin checks your listing, usually within a day.') }}</li>
+        <li>{{ _('Once approved, it shows in Explore with your area and PIN code. Never your address.') }}</li>
+        <li>{{ _('People request it. You choose who gets it.') }}</li>
+        <li>{{ _("When you approve someone, you both see each other's private contact note to arrange the handover.") }}</li>
+      </ol>
+      <p class="warning-box-inline">{{ icon('alert', 18) }} {{ _('Medicines, syringes, chemicals, paint and other hazardous items can never be listed.') }}</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

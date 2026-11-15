@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head %}
+{% block title %}{{ _('Something went wrong') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{{ page_head(_('Something went wrong') if code != 404 else _('Page not found'), message, 'unsure', code|string) }}
+<section class="section section--tight">
+  <div class="wrap">
+    <a class="btn btn-primary" href="/">{{ _('Back to the home page') }} {{ icon('arrow', 18) }}</a>
+  </div>
+</section>
+{% endblock %}

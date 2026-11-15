@@ -34,15 +34,26 @@ def test_demo_listings_are_labelled(client):
     assert "Demonstration listings only" in html
 
 
-@pytest.mark.parametrize("page", PAGES, ids=lambda p: p.slug)
-def test_every_page_renders_with_nav(client, page):
+SIGNED_IN_ONLY = {"dashboard", "admin"}
+PUBLIC_NAV = ["/", "/scan", "/assistant", "/donate", "/donations", "/centres", "/account/login", "/account/signup"]
+
+
+@pytest.mark.parametrize("page", [p for p in PAGES if p.slug not in SIGNED_IN_ONLY], ids=lambda p: p.slug)
+def test_every_public_page_renders_with_nav(client, page):
     response = client.get(page.path)
     assert response.status_code == 200
     assert page.title in response.text
-    if page.slug not in {"scan", "assistant"}:  # live since Phases 3 and 4
+    if page.slug == "centres":  # the only page still waiting for its phase
         assert f"Arrives in Phase {page.phase}" in response.text
-    for nav_page in PAGES:
-        assert f'href="{nav_page.path}"' in response.text
+    for path in PUBLIC_NAV:
+        assert f'href="{path}"' in response.text
+
+
+@pytest.mark.parametrize("path", ["/dashboard", "/admin", "/account"])
+def test_signed_in_pages_send_visitors_to_login(client, path):
+    response = client.get(path, follow_redirects=False)
+    assert response.status_code == 303
+    assert response.headers["location"].startswith("/account/login?next=")
 
 
 def test_current_page_marked_in_nav(client):
@@ -65,7 +76,7 @@ def test_health_reports_ok(client):
     data = client.get("/api/health").json()
     assert data["status"] == "ok"
     assert data["python"].startswith("3.12")
-    assert set(data["integrations"]) == {"supabase", "llm", "embeddings", "maps"}
+    assert set(data["integrations"]) == {"supabase", "llm", "embeddings", "maps", "accounts", "admins_configured", "anon_key_misconfigured"}
 
 
 def test_health_never_exposes_secret_values(monkeypatch):
@@ -88,10 +99,11 @@ def test_static_assets_served_locally(client, path):
     assert client.get(path).status_code == 200
 
 
-def test_nav_includes_all_eight_destinations(client):
+def test_signed_out_nav_offers_login_not_admin(client):
     html = client.get("/").text
-    for path in ["/", "/scan", "/assistant", "/donate", "/donations", "/centres", "/dashboard", "/admin"]:
+    for path in PUBLIC_NAV:
         assert f'href="{path}"' in html
+    assert 'href="/admin"' not in html
 
 
 def test_tagline_sits_in_hero(client):

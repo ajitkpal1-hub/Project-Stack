@@ -1,0 +1,44 @@
+{% from "partials/icons.html" import icon %}
+{# Shared pieces for the Phase 6 pages: page head, status stamp, listing chit, form errors. #}
+
+{% macro page_head(title, purpose, lane, stencil) -%}
+<section class="page-head">
+  <div class="wrap page-head-row">
+    <div class="page-bin lane--{{ lane }}" aria-hidden="true"><span>{{ stencil }}</span></div>
+    <div>
+      <h1 class="display-1">{{ title }}</h1>
+      <p class="page-purpose">{{ purpose }}</p>
+    </div>
+  </div>
+</section>
+{%- endmacro %}
+
+{% macro stamp(status, labels) -%}
+<span class="stamp stamp--{{ status.value }}">{{ _(labels[status]) }}</span>
+{%- endmacro %}
+
+{% macro chit(view, category_labels, condition_labels, status_labels, link=true) -%}
+{% set x = view.listing %}
+<article class="chit">
+  {% if view.photo_url %}<img class="chit-photo" src="{{ view.photo_url }}" alt="{{ _('Photo of %(t)s', t=x.title) }}" loading="lazy">{% endif %}
+  <div class="chit-head">
+    <h3 class="chit-title">{% if link %}<a href="/donations/{{ x.id }}">{{ x.title }}</a>{% else %}{{ x.title }}{% endif %}</h3>
+    {{ stamp(x.status, status_labels) }}
+  </div>
+  <dl class="chit-fields">
+    <div><dt>{{ _('Category') }}</dt><dd>{{ _(category_labels[x.category]) }}</dd></div>
+    <div><dt>{{ _('Donor says') }}</dt><dd>{{ _(condition_labels[x.condition]) }}</dd></div>
+    <div><dt>{{ _('Area') }}</dt><dd>{{ x.locality }}, {{ x.pin_code }}</dd></div>
+  </dl>
+</article>
+{%- endmacro %}
+
+{% macro form_error(error) -%}
+{% if error %}<p class="notice notice--error" role="alert">{{ icon('alert', 18) }} {{ error }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro not_ready(ready) -%}
+{% if not ready %}
+<p class="notice">{{ icon('clock', 18) }} {{ _("Accounts and donations aren't switched on yet. Please check back soon.") }}</p>
+{% endif %}
+{%- endmacro %}
