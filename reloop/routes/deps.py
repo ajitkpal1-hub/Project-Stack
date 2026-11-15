@@ -85,6 +85,24 @@ def partner_service() -> PartnerService:
     return PartnerService(partner_repo(), geo())
 
 
+_limiter_override = None
+_MEMORY_COUNTER = None
+
+
+def rate_limiter():
+    """Usage limits shared across instances via Supabase, with an in-memory fallback."""
+    global _MEMORY_COUNTER
+    from reloop.services.ratelimit import MemoryCounter, RateLimiter, SupabaseCounter
+
+    if _limiter_override is not None:
+        return _limiter_override
+    if _MEMORY_COUNTER is None:
+        _MEMORY_COUNTER = MemoryCounter()
+    client = _client()
+    pepper = get_settings().supabase_service_role_key.strip() or "reloop-local"
+    return RateLimiter(SupabaseCounter(client, _MEMORY_COUNTER) if client else _MEMORY_COUNTER, pepper)
+
+
 _dash_repo_override = None
 
 

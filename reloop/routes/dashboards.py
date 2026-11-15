@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from reloop.database.supabase import SupabaseError
 from reloop.models.categories import LANES_BY_CATEGORY
 from reloop.models.dashboards import FLAG_REASON_LABELS
-from reloop.routes.deps import dashboard_service, require_user, viewer
+from reloop.routes.deps import dashboard_service, rate_limiter, require_user, viewer
 from reloop.security import flash, verify_csrf
 from reloop.services.dashboards import DashboardError
 from reloop.templating import templates
@@ -54,6 +54,9 @@ def report(request: Request, kind: str = Form(""), reason: str = Form(""), note:
     to = BACK.get(kind, "/")
     if service is None:
         return _back(request, to, "Reporting isn't switched on yet. Thank you for trying.", "error")
+    limited = rate_limiter().check(request, "report")
+    if limited:
+        return _back(request, to, limited, "error")
     try:
         service.report(viewer(request).user, kind, reason, note, payload)
     except (DashboardError, SupabaseError) as e:

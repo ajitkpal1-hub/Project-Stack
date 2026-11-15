@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from reloop.database.supabase import AuthError, SupabaseError
 from reloop.models.donations import ProfileForm
-from reloop.routes.deps import accounts_ready, auth_backend, donation_service, require_user, safe_next, viewer
+from reloop.routes.deps import accounts_ready, auth_backend, donation_service, rate_limiter, require_user, safe_next, viewer
 from reloop.security import clear_session, flash, set_session, verify_csrf
 from reloop.templating import templates
 
@@ -60,6 +60,9 @@ def login_submit(request: Request, email: str = Form(""), password: str = Form("
         return _auth_page(request, "login", 503, next=safe_next(next), email=email)
     if not email or not password:
         return _auth_page(request, "login", 422, next=safe_next(next), email=email, error="Please enter your email and password.")
+    limited = rate_limiter().check(request, "auth")
+    if limited:
+        return _auth_page(request, "login", 429, next=safe_next(next), email=email, error=limited)
     try:
         session = backend.sign_in(email, password)
     except SupabaseError as e:
@@ -78,6 +81,9 @@ def signup_submit(request: Request, email: str = Form(""), password: str = Form(
     problem = _validate(email, password)
     if problem:
         return _auth_page(request, "signup", 422, next=safe_next(next), email=email, error=problem)
+    limited = rate_limiter().check(request, "auth")
+    if limited:
+        return _auth_page(request, "signup", 429, next=safe_next(next), email=email, error=limited)
     try:
         session = backend.sign_up(email, password)
     except SupabaseError as e:
@@ -88,7 +94,8 @@ def signup_submit(request: Request, email: str = Form(""), password: str = Form(
     set_session(request, session)
     log.info("account created")
     flash(request, "Welcome to RELOOP AI! Add your locality so donations can be matched nearby.")
-    return RedirectResponse("/account", status_code=303)
+    target = safe_next(next)
+    return RedirectResponse(target if next and target != "/dashboard" else "/account", status_code=303)
 
 
 @router.post("/account/logout", dependencies=[Depends(verify_csrf)])

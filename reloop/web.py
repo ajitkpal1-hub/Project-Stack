@@ -47,6 +47,15 @@ def create_app() -> FastAPI:
     async def _login_required(request: Request, exc: LoginRequired) -> RedirectResponse:
         return RedirectResponse(login_url(exc.next_path), status_code=303)
 
+    @app.exception_handler(Exception)
+    async def _server_error(request: Request, exc: Exception) -> HTMLResponse:
+        import logging
+
+        logging.getLogger("reloop.web").exception("unhandled error on %s", request.url.path)
+        return templates.TemplateResponse(request, "error.html", {"active": "", "code": 500,
+                                          "message": "Something went wrong on our side. Please try again in a minute."},
+                                          status_code=500)
+
     @app.exception_handler(HTTPException)
     async def _http_error(request: Request, exc: HTTPException) -> HTMLResponse:
         messages = {403: "Your form expired. Please go back, refresh the page and try again.",

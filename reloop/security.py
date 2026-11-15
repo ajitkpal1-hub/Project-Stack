@@ -110,4 +110,40 @@ class SessionMiddleware(BaseHTTPMiddleware):
             response.delete_cookie(FLASH_COOKIE, path="/")
         if request.cookies.get(SESSION_COOKIE) or update:
             response.headers["Cache-Control"] = "private, no-store"  # never cache signed-in pages
+        for name, value in security_headers(secure).items():
+            response.headers.setdefault(name, value)
         return response
+
+
+def _photo_origin() -> str:
+    from reloop.config import get_settings
+
+    url = get_settings().supabase_url.strip().rstrip("/")
+    return url if url.startswith("https://") else ""
+
+
+def security_headers(secure: bool) -> dict[str, str]:
+    """No page runs JavaScript or inline styles, so the policy can be strict.
+    Listing photos come from Supabase Storage through short-lived signed links."""
+    csp = "; ".join([
+        "default-src 'self'",
+        "script-src 'none'",
+        "style-src 'self'",
+        "font-src 'self'",
+        f"img-src 'self' data: {_photo_origin()}".strip(),
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+        "base-uri 'none'",
+        "object-src 'none'",
+    ] + (["upgrade-insecure-requests"] if secure else []))
+    headers = {
+        "Content-Security-Policy": csp,
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "Cross-Origin-Opener-Policy": "same-origin",
+    }
+    if secure:
+        headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    return headers

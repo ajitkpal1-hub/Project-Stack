@@ -8,6 +8,7 @@ from PIL import Image, UnidentifiedImageError
 # Vercel functions reject request bodies over 4.5 MB, so we cap uploads below that.
 MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 MAX_SIDE_PX = 1568  # larger images cost more tokens without helping recognition
+MAX_PIXELS = 40_000_000  # about 6300 x 6300; phone photos are around 12 megapixels
 ALLOWED_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 ALLOWED_CONTENT_TYPES = set(ALLOWED_FORMATS.values()) | {"image/jpg"}
 
@@ -36,11 +37,15 @@ def prepare_image(raw: bytes, content_type: str | None) -> PreparedImage:
     try:
         with Image.open(io.BytesIO(raw)) as probe:
             fmt = probe.format
+            width, height = probe.size
             probe.verify()
-    except (UnidentifiedImageError, OSError, SyntaxError):
+    except (UnidentifiedImageError, OSError, SyntaxError, Image.DecompressionBombError):
         raise ImageValidationError("We couldn't read that file as a photo. Please try a JPG, PNG or WEBP image.") from None
     if fmt not in ALLOWED_FORMATS:
         raise ImageValidationError("Please upload a JPG, PNG or WEBP photo.")
+    # A tiny file can claim enormous dimensions ("decompression bomb"). Refuse before decoding.
+    if width * height > MAX_PIXELS:
+        raise ImageValidationError("That image is too large to process. Please use a normal phone photo.")
 
     try:
         img = Image.open(io.BytesIO(raw))

@@ -20,7 +20,7 @@
       <p>{{ _('You need an account so people can request your item and you can approve them.') }}</p>
       <p class="action-row">
         <a class="btn btn-primary" href="{{ login_link }}">{{ _('Log in') }} {{ icon('arrow', 18) }}</a>
-        <a class="btn btn-quiet" href="/account/signup?next=/donate">{{ _('Create an account') }}</a>
+        <a class="btn btn-quiet" href="{{ login_link | replace("/account/login", "/account/signup") }}">{{ _('Create an account') }}</a>
       </p>
       {% else %}
       {% if from_scan %}<p class="notice notice--ok">{{ icon('check', 18) }} {{ _("We've filled in what we could from your scan. Please check every field.") }}</p>{% endif %}

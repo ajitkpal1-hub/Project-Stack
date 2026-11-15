@@ -20,7 +20,9 @@ def _isolate_settings(monkeypatch):
     for name in _SERVICE_VARS:
         monkeypatch.delenv(name, raising=False)
     from reloop.routes import deps
+    from reloop.services.ratelimit import MemoryCounter, RateLimiter
     monkeypatch.setattr(deps, "_geo_disabled", True)
+    monkeypatch.setattr(deps, "_limiter_override", RateLimiter(MemoryCounter(), "test-pepper"))  # fresh limits per test
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

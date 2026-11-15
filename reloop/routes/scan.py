@@ -16,7 +16,7 @@ from reloop.agents.pipeline import WastePipeline
 from reloop.models.classification import CONDITION_LABELS, Certainty, Condition
 from reloop.models.pipeline import DonationStatus, PipelineResult, StepStatus
 from reloop.rag.answer import get_assistant
-from reloop.routes.deps import partner_repo
+from reloop.routes.deps import partner_repo, rate_limiter
 from reloop.services.partners import DirectoryPartners
 from reloop.services.classifier import Classifier, ClassifierUnavailable, get_classifier
 from reloop.templating import templates
@@ -86,6 +86,10 @@ async def scan_submit(
         image = prepare_image(raw, photo.content_type)
     except ImageValidationError as e:
         return _render(request, status_code=422, error=str(e))
+
+    limited = rate_limiter().check(request, "scan")  # each scan is a paid AI call
+    if limited:
+        return _render(request, status_code=429, error=limited)
 
     try:
         outcome = _pipeline(classifier).run(image, note=note.strip() or None, filename=photo.filename)

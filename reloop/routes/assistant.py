@@ -10,6 +10,7 @@ from reloop.models.knowledge import Answer, AnswerMode
 from reloop.rag.answer import KnowledgeAssistant, get_generator
 from reloop.rag.embeddings import get_embedder
 from reloop.rag.store import StoreError, get_store
+from reloop.routes.deps import rate_limiter
 from reloop.templating import templates
 
 router = APIRouter()
@@ -69,6 +70,9 @@ def assistant_ask(request: Request, question: str = Form("")) -> HTMLResponse:
         answer = Answer(mode=AnswerMode.UNAVAILABLE, question=question,
                         message="The knowledge base isn't ready yet, so we can't answer from verified sources.")
     else:
+        limited = rate_limiter().check(request, "assistant")  # each answer is a paid AI call
+        if limited:
+            return _render(request, 429, state=state, doc_count=count, question=question, error=limited)
         answer = assistant.answer(question)
     log.info("assistant mode=%s sources=%d", answer.mode, len(answer.sources))
     return _render(request, state=state, doc_count=count, question=question, answer=answer)
