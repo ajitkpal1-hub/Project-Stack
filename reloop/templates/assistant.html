@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/icons.html" import icon %}
 {% from "partials/sources.html" import source_list %}
+{% from "partials/ai_actions.html" import ai_actions with context %}
 {% set page = pages_by_slug['assistant'] %}
 {% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
 {% block description %}{{ _(page.purpose) }}{% endblock %}
@@ -64,6 +65,7 @@
         <h2 class="display-3 sources-title">{{ _('Sources') }}</h2>
         {{ source_list(answer.sources) }}
         {% endif %}
+        {% if answer.mode != modes.UNAVAILABLE %}{{ ai_actions('answer', answer.model_dump_json(), current_viewer(request), flag_reason_labels) }}{% endif %}
         <p class="fineprint">{{ _('Answers come only from the documents listed. Rules can change, so for anything hazardous, confirm with your municipal office.') }}</p>
       </article>
       {% endif %}

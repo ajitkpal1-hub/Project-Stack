@@ -1,0 +1,40 @@
+{% from "partials/icons.html" import icon %}
+{# "Save to my dashboard" and "Report a problem" under an AI answer. The result travels back
+   in a hidden field; the server validates it again and stores only a short text summary. #}
+{% macro ai_actions(kind, payload, me, reason_labels) -%}
+<div class="ai-actions">
+  {% if me.signed_in %}
+  <form class="inline-form" action="/saved" method="post">
+    {{ csrf_field(request) }}
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="payload" value="{{ payload }}">
+    <button class="btn btn-quiet btn-small" type="submit">{{ icon('check', 16) }} {{ _('Save to my dashboard') }}</button>
+  </form>
+  {% else %}
+  <a class="btn btn-quiet btn-small" href="/account/login?next={{ '/scan' if kind == 'scan' else '/assistant' }}">{{ _('Log in to save answers') }}</a>
+  {% endif %}
+
+  <details class="report">
+    <summary>{{ icon('alert', 16) }} {{ _('Report a problem with this answer') }}</summary>
+    <form class="form-stack report-form" action="/report" method="post">
+      {{ csrf_field(request) }}
+      <input type="hidden" name="kind" value="{{ kind }}">
+      <input type="hidden" name="payload" value="{{ payload }}">
+      <fieldset class="field">
+        <legend>{{ _("What's wrong?") }}</legend>
+        <div class="check-grid">
+          {% for r, label in reason_labels.items() %}
+          <label class="option"><input type="radio" name="reason" value="{{ r.value }}" required> <span>{{ _(label) }}</span></label>
+          {% endfor %}
+        </div>
+      </fieldset>
+      <label class="field">
+        <span>{{ _('Tell us more (optional)') }}</span>
+        <textarea name="note" maxlength="500" rows="2" placeholder="{{ _('e.g. This is a CFL bulb, so it should be hazardous') }}"></textarea>
+        <small>{{ _("Please don't include your phone number or address. Your photo is never sent with a report.") }}</small>
+      </label>
+      <button class="btn btn-primary btn-small" type="submit">{{ _('Send report') }}</button>
+    </form>
+  </details>
+</div>
+{%- endmacro %}

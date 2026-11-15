@@ -2,6 +2,7 @@
 {% from "partials/icons.html" import icon %}
 {% from "partials/chute.html" import chute %}
 {% from "partials/sources.html" import source_list %}
+{% from "partials/ai_actions.html" import ai_actions with context %}
 {% set page = pages_by_slug['scan'] %}
 {% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
 {% block description %}{{ _(page.purpose) }}{% endblock %}
@@ -169,6 +170,7 @@
             </ol>
           </details>
 
+          {{ ai_actions('scan', pipeline.model_dump_json(), current_viewer(request), flag_reason_labels) }}
           <p class="fineprint">{{ _('Identified from one photo. AI can be wrong, so check labels and follow your local collection rules.') }}</p>
         </div>
       </div>

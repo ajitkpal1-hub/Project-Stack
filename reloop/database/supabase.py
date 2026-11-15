@@ -153,6 +153,31 @@ class SupabaseClient:
             return None
         return r.json()
 
+    def count(self, path: str, params: dict[str, str] | None = None) -> int:
+        """Exact row count (service role), read from the Content-Range header."""
+        headers = {"apikey": self._service, "Authorization": f"Bearer {self._service}", "Prefer": "count=exact", "Range": "0-0"}
+        try:
+            r = httpx.request("GET", f"{self.url}/rest/v1{path}", params={"select": "id", **(params or {})},
+                              headers=headers, timeout=self._timeout)
+        except httpx.HTTPError:
+            raise SupabaseError("We couldn't reach the database. Please try again shortly.") from None
+        if r.status_code >= 400:
+            log.error("supabase count error status=%s path=%s", r.status_code, path)
+            raise SupabaseError("Something went wrong loading the numbers. Please try again.")
+        total = r.headers.get("content-range", "*/0").rsplit("/", 1)[-1]
+        return int(total) if total.isdigit() else 0
+
+    def count_users(self) -> int | None:
+        try:
+            r = httpx.get(f"{self.url}/auth/v1/admin/users", params={"page": "1", "per_page": "1"},
+                          headers={"apikey": self._service, "Authorization": f"Bearer {self._service}"}, timeout=self._timeout)
+        except httpx.HTTPError:
+            return None
+        if r.status_code != 200:
+            return None
+        total = r.headers.get("x-total-count") or r.json().get("total")
+        return int(total) if str(total).isdigit() else None
+
     # ---------- storage (service role only; the bucket is private) ----------
     def _storage(self, method: str, path: str, **kw: Any) -> httpx.Response:
         headers = {"apikey": self._service, "Authorization": f"Bearer {self._service}", **kw.pop("headers", {})}

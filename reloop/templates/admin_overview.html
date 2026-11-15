@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error %}
+{% from "partials/admin_nav.html" import admin_nav, forbidden_notice %}
+{% block title %}{{ _('Admin dashboard') }} | RELOOP AI{% endblock %}
+
+{% macro tile(value, label, href, urgent=false) -%}
+<a class="stat-tile {{ 'stat-tile--urgent' if urgent }}" href="{{ href }}">
+  <span class="stat-value">{{ value if value is not none else '—' }}</span>
+  <span class="stat-label">{{ label }}</span>
+</a>
+{%- endmacro %}
+
+{% block main %}
+{{ page_head(_('Admin dashboard'), _('What needs attention, and the state of RELOOP at a glance.'), 'hazardous', 'ADMIN') }}
+
+<section class="section section--tight">
+  <div class="wrap dash">
+    {% if forbidden %}{{ forbidden_notice() }}{% else %}
+    {{ admin_nav('overview') }}
+    {{ form_error(error) }}
+    {% if stats %}
+    <h2 class="display-3">{{ _('Needs your attention') }}</h2>
+    <div class="stat-grid">
+      {{ tile(stats.listings_pending, _('Listings waiting for review'), '/admin/listings', stats.listings_pending > 0) }}
+      {{ tile(stats.suggestions_pending, _('Place suggestions to check'), '/admin/partners', stats.suggestions_pending > 0) }}
+      {{ tile(stats.flags_open, _('Reported AI answers'), '/admin/flags', stats.flags_open > 0) }}
+    </div>
+    <h2 class="display-3 dash-section">{{ _('RELOOP today') }}</h2>
+    <div class="stat-grid">
+      {{ tile(stats.listings_public, _('Listings public now'), '/donations') }}
+      {{ tile(stats.listings_completed, _('Items handed over'), '/admin/listings') }}
+      {{ tile(stats.directory_verified, _('Verified places in the directory'), '/admin/partners') }}
+      {{ tile(stats.documents_active, _('Knowledge documents in use'), '/admin/knowledge') }}
+      {{ tile(stats.members, _('Member accounts'), '/admin') }}
+    </div>
+    <p class="fineprint">{{ _('Plain counts from the database. RELOOP makes no carbon or impact estimates without a documented method.') }}</p>
+    {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

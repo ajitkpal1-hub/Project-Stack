@@ -85,6 +85,19 @@ def partner_service() -> PartnerService:
     return PartnerService(partner_repo(), geo())
 
 
+_dash_repo_override = None
+
+
+def dashboard_service():
+    from reloop.database.dashboards import SupabaseDashboardRepo
+    from reloop.services.dashboards import DashboardService
+
+    if _dash_repo_override is not None:
+        return DashboardService(_dash_repo_override)
+    client = _client()
+    return DashboardService(SupabaseDashboardRepo(client)) if client else None
+
+
 def accounts_ready() -> bool:
     return auth_backend() is not None and donation_service() is not None
 

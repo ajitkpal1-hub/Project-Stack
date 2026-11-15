@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error %}
+{% from "partials/admin_nav.html" import admin_nav, forbidden_notice %}
+{% block title %}{{ _('Knowledge documents') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{{ page_head(_('Knowledge documents'), _('The official documents the assistant quotes from. Archive one to stop it being used.'), 'hazardous', 'ADMIN') }}
+
+<section class="section section--tight">
+  <div class="wrap dash">
+    {% if forbidden %}{{ forbidden_notice() }}{% else %}
+    {{ admin_nav('knowledge') }}
+    {{ form_error(error) }}
+    <p class="notice notice--kb">{{ icon('alert', 18) }} {{ _('To add or update a document, put the PDF in the knowledge folder, add it to manifest.toml, and run scripts/ingest.py.') }}</p>
+    {% if not docs %}<p class="empty-line">{{ _('No documents loaded.') }}</p>{% endif %}
+    <div class="doc-table-wrap">
+      <table class="doc-table">
+        <thead><tr><th>{{ _('Document') }}</th><th>{{ _('Passages') }}</th><th>{{ _('Status') }}</th><th><span class="visually-hidden">{{ _('Action') }}</span></th></tr></thead>
+        <tbody>
+          {% for d in docs %}
+          <tr class="{{ 'doc--archived' if d.status != 'active' }}">
+            <td>
+              <strong>{% if d.source_url and d.source_url.lower().startswith(('https://', 'http://')) %}<a href="{{ d.source_url }}" target="_blank" rel="noopener noreferrer">{{ d.title }}</a>{% else %}{{ d.title }}{% endif %}</strong>
+              <span class="dash-meta">{{ [d.publisher, d.published_on, d.file_name] | select | join(' · ') }}</span>
+            </td>
+            <td>{{ d.chunk_count }}</td>
+            <td><span class="badge {{ 'badge--verified' if d.status == 'active' else 'badge--unverified' }}">{{ _('In use') if d.status == 'active' else _('Archived') }}</span></td>
+            <td>
+              <form class="inline-form" action="/admin/knowledge/{{ d.id }}/{{ 'archive' if d.status == 'active' else 'restore' }}" method="post">{{ csrf_field(request) }}
+                <button class="btn btn-quiet btn-small" type="submit">{{ _('Archive') if d.status == 'active' else _('Restore') }}</button></form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

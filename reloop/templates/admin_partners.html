@@ -2,6 +2,7 @@
 {% from "partials/icons.html" import icon %}
 {% from "partials/donations.html" import page_head, form_error %}
 {% from "partials/partners.html" import partner_fields, entry_card %}
+{% from "partials/admin_nav.html" import admin_nav %}
 {% block title %}{{ _('Directory admin') }} | RELOOP AI{% endblock %}
 
 {% macro action(url, label, cls='btn-quiet') -%}
@@ -17,7 +18,7 @@
     {% if pending is none %}
     <p class="notice notice--error">{{ icon('alert', 18) }} {{ _("This page is only for RELOOP admins. Your account doesn't have admin access.") }}</p>
     {% else %}
-    <p class="action-row"><a class="btn btn-quiet" href="/admin">{{ _('Listing queue') }}</a></p>
+    {{ admin_nav('directory') }}
 
     <h2 class="display-2">{{ _('Suggestions to review') }}</h2>
     {% if not pending %}<p class="empty-line">{{ icon('check', 18) }} {{ _('No suggestions waiting.') }}</p>{% endif %}

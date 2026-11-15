@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% from "partials/icons.html" import icon %}
 {% from "partials/donations.html" import page_head, stamp, form_error %}
-{% block title %}{{ _('Admin queue') }} | RELOOP AI{% endblock %}
+{% from "partials/admin_nav.html" import admin_nav %}
+{% block title %}{{ _('Listing queue') }} | RELOOP AI{% endblock %}
 
 {% block main %}
-{{ page_head(_('Admin queue'), _('Approve or reject new donation listings before they go public.'), 'hazardous', 'ADMIN') }}
+{{ page_head(_('Listing queue'), _('Approve or reject new donation listings before they go public.'), 'hazardous', 'ADMIN') }}
 
 <section class="section section--tight">
   <div class="wrap dash">
+    {% if queue is not none %}{{ admin_nav('listings') }}{% endif %}
     {{ form_error(error) }}
-    {% if queue is not none %}<p class="action-row"><a class="btn btn-quiet" href="/admin/partners">{{ _('Recycling and donation directory') }} {{ icon('arrow', 18) }}</a></p>{% endif %}
     {% if queue is none %}
     <p class="notice notice--error">{{ icon('alert', 18) }} {{ _("This page is only for RELOOP admins. Your account doesn't have admin access.") }}</p>
     {% elif not queue %}

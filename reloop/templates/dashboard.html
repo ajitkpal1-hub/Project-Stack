@@ -21,6 +21,15 @@
       <a href="/account">{{ _('Edit profile') }}</a></p>
     {% endif %}
 
+    {% if stats %}
+    <div class="stat-grid stat-grid--small" aria-label="{{ _('Your totals') }}">
+      <div class="stat-tile"><span class="stat-value">{{ stats.given_away }}</span><span class="stat-label">{{ _('Items you gave away') }}</span></div>
+      <div class="stat-tile"><span class="stat-value">{{ stats.listed_now }}</span><span class="stat-label">{{ _('Listed now') }}</span></div>
+      <div class="stat-tile"><span class="stat-value">{{ stats.waiting_review }}</span><span class="stat-label">{{ _('Waiting for review') }}</span></div>
+      <div class="stat-tile"><span class="stat-value">{{ stats.received }}</span><span class="stat-label">{{ _('Items you received') }}</span></div>
+    </div>
+    {% endif %}
+
     <div class="dash-head">
       <h2 class="display-2">{{ _('My listings') }}</h2>
       <a class="btn btn-primary" href="/donate">{{ icon('gift', 18) }} {{ _('Donate an item') }}</a>
@@ -98,6 +107,35 @@
       </article>
       {% endfor %}
     </div>
+
+    <h2 id="saved" class="display-2 dash-section">{{ _('Saved scans and answers') }}</h2>
+    {% if saved_error %}
+    <p class="notice">{{ icon('alert', 18) }} {{ _("We couldn't load your saved items just now.") }}</p>
+    {% elif not saved %}
+    <p class="empty-line">{{ _('Nothing saved yet. Use "Save to my dashboard" on a scan result or an assistant answer.') }}</p>
+    {% else %}
+    <div class="dash-list">
+      {% for it in saved %}
+      {% set s = it.summary %}
+      <article class="dash-item saved-item">
+        <div class="chit-head">
+          <h3 class="chit-title">{{ it.title }}</h3>
+          {% if it.kind.value == 'scan' and it.lane %}<span class="chip lane--{{ it.lane }}">{{ lane_stencils.get(it.lane, it.lane) }}</span>{% else %}<span class="req-status">{{ _('Answer') }}</span>{% endif %}
+        </div>
+        {% if it.created_at %}<p class="dash-meta">{{ _('Saved') }} {{ it.created_at.strftime('%d %b %Y') }}{% if s.demo %} · {{ _('demo sample, not real AI') }}{% endif %}</p>{% endif %}
+        {% if it.kind.value == 'scan' %}
+        <p>{{ s.advice }}</p>
+        {% if s.warnings %}<p class="dash-note dash-note--bad">{{ s.warnings | join(' ') }}</p>{% endif %}
+        {% if s.steps %}<ol class="saved-steps">{% for st in s.steps %}<li>{{ st }}</li>{% endfor %}</ol>{% endif %}
+        {% else %}
+        <p>{{ s.answer }}</p>
+        {% if s.sources %}<p class="dash-meta">{{ _('Sources:') }} {% for src in s.sources %}{% if src.url %}<a href="{{ src.url }}" target="_blank" rel="noopener noreferrer">{{ src.title }}</a>{% else %}{{ src.title }}{% endif %}{% if src.page %} (p. {{ src.page }}){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+        {% endif %}
+        <div class="action-row">{{ action('/saved/' ~ it.id ~ '/delete', _('Delete')) }}</div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% endif %}
   </div>
 </section>

@@ -165,3 +165,67 @@ class InMemoryPartnerRepo:
 
     def delete(self, entry_id):
         self.rows.pop(entry_id, None)
+
+
+class InMemoryDashboardRepo:
+    """Saved items, reports and documents for tests. Mirrors the saved_items RLS (own rows only)."""
+
+    def __init__(self, donations: InMemoryDonationRepo | None = None, partners: InMemoryPartnerRepo | None = None) -> None:
+        self.saved: dict = {}
+        self.flag_rows: dict = {}
+        self.docs: dict = {}
+        self.donations, self.partners = donations, partners
+        self.members: int | None = 0
+
+    def save_item(self, user_id, kind, title, lane, summary, token):
+        from reloop.models.dashboards import SavedItem
+        item = SavedItem(id=str(uuid.uuid4()), user_id=user_id, kind=kind, title=title, lane=lane, summary=summary,
+                         created_at=datetime.now(UTC))
+        self.saved[item.id] = item
+        return item
+
+    def saved_items(self, user_id, token):
+        return sorted((i for i in self.saved.values() if i.user_id == user_id), key=lambda i: i.created_at, reverse=True)
+
+    def delete_saved(self, user_id, item_id, token):
+        item = self.saved.get(item_id)
+        if item is not None and item.user_id == user_id:
+            del self.saved[item_id]
+
+    def add_flag(self, kind, reason, note, snapshot, reporter_id):
+        from reloop.models.dashboards import AiFlag
+        f = AiFlag(id=str(uuid.uuid4()), kind=kind, reason=reason, note=note, snapshot=snapshot, reporter_id=reporter_id,
+                   created_at=datetime.now(UTC))
+        self.flag_rows[f.id] = f
+
+    def flags(self, status):
+        return [f for f in self.flag_rows.values() if f.status.value == status]
+
+    def get_flag(self, flag_id):
+        return self.flag_rows.get(flag_id)
+
+    def resolve_flag(self, flag_id, admin_note):
+        from reloop.models.dashboards import FlagStatus
+        self.flag_rows[flag_id] = self.flag_rows[flag_id].model_copy(update={"status": FlagStatus.RESOLVED, "admin_note": admin_note})
+
+    def documents(self):
+        return sorted(self.docs.values(), key=lambda d: d.title)
+
+    def set_document_status(self, doc_id, status):
+        self.docs[doc_id] = self.docs[doc_id].model_copy(update={"status": status})
+
+    def count(self, table, **filters):
+        rows = {
+            "donation_listings": list(self.donations.listings.values()) if self.donations else [],
+            "partners": list(self.partners.rows.values()) if self.partners else [],
+            "ai_flags": list(self.flag_rows.values()),
+            "knowledge_documents": list(self.docs.values()),
+        }[table]
+
+        def val(row, key):
+            v = getattr(row, key)
+            return v.value if hasattr(v, "value") else v
+        return sum(1 for r in rows if all(val(r, k) == v for k, v in filters.items()))
+
+    def member_count(self):
+        return self.members

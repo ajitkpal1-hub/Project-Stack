@@ -442,7 +442,7 @@ def test_full_donation_journey_keeps_contacts_private(env):
     assert "Children&#39;s story books" not in stranger.get("/donations").text  # not public yet
 
     signup(admin, ADMIN_EMAIL)
-    queue = admin.get("/admin")
+    queue = admin.get("/admin/listings")
     assert queue.status_code == 200 and "story books" in queue.text
     assert post(admin, f"/admin/listings/{listing.id}/approve").status_code == 303
 

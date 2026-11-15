@@ -27,7 +27,8 @@ from reloop.models.donations import (
     RequestStatus,
 )
 from reloop.routes.account import _first_error
-from reloop.routes.deps import accounts_ready, donation_service, login_url, require_user, viewer
+from reloop.routes.deps import accounts_ready, dashboard_service, donation_service, login_url, require_user, viewer
+from reloop.services.dashboards import user_stats
 from reloop.security import flash, verify_csrf
 from reloop.services.donations import DonationError
 from reloop.templating import templates
@@ -172,7 +173,14 @@ def dashboard(request: Request, v=Depends(require_user)) -> HTMLResponse:
         board = service.dashboard(v.user, v.token)
     except SupabaseError as e:
         return _render(request, "dashboard.html", "dashboard", 503, viewer=v, board=None, error=str(e))
-    return _render(request, "dashboard.html", "dashboard", viewer=v, board=board)
+    saved, stats, saved_error = None, user_stats(board), None
+    dash = dashboard_service()
+    if dash is not None:
+        try:
+            saved = dash.saved(v.user, v.token)
+        except SupabaseError:
+            saved_error = True
+    return _render(request, "dashboard.html", "dashboard", viewer=v, board=board, saved=saved, stats=stats, saved_error=saved_error)
 
 
 def _dashboard_action(request: Request, v, action, target: str, done: str) -> Response:
@@ -218,7 +226,7 @@ def delete(request: Request, listing_id: str, v=Depends(require_user)) -> Respon
 
 # ---------- admin ----------
 
-@router.get("/admin", response_class=HTMLResponse)
+@router.get("/admin/listings", response_class=HTMLResponse)
 def admin_page(request: Request, v=Depends(require_user)) -> HTMLResponse:
     if not v.user.is_admin:
         return _render(request, "admin.html", "admin", 403, viewer=v, queue=None)
@@ -234,8 +242,8 @@ def admin_approve(request: Request, listing_id: str, v=Depends(require_user)) ->
     try:
         donation_service().admin_approve(v.user, listing_id)
     except (DonationError, SupabaseError) as e:
-        return _back(request, "/admin", str(e), "error")
-    return _back(request, "/admin", "Listing approved. It's now public.")
+        return _back(request, "/admin/listings", str(e), "error")
+    return _back(request, "/admin/listings", "Listing approved. It's now public.")
 
 
 @router.post("/admin/listings/{listing_id}/reject", dependencies=[Depends(verify_csrf)])
@@ -243,5 +251,5 @@ def admin_reject(request: Request, listing_id: str, v=Depends(require_user), rea
     try:
         donation_service().admin_reject(v.user, listing_id, reason)
     except (DonationError, SupabaseError) as e:
-        return _back(request, "/admin", str(e), "error")
-    return _back(request, "/admin", "Listing rejected. The donor will see your reason.")
+        return _back(request, "/admin/listings", str(e), "error")
+    return _back(request, "/admin/listings", "Listing rejected. The donor will see your reason.")

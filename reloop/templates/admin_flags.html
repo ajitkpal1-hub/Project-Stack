@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error %}
+{% from "partials/admin_nav.html" import admin_nav, forbidden_notice %}
+{% block title %}{{ _('Reported answers') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{{ page_head(_('Reported answers'), _('Scan results and assistant answers that people said were wrong.'), 'hazardous', 'ADMIN') }}
+
+<section class="section section--tight">
+  <div class="wrap dash">
+    {% if forbidden %}{{ forbidden_notice() }}{% else %}
+    {{ admin_nav('flags') }}
+    {{ form_error(error) }}
+    {% if not flags %}<p class="empty-line">{{ icon('check', 18) }} {{ _('No open reports.') }}</p>{% endif %}
+    <div class="dash-list">
+      {% for f in flags %}
+      {% set s = f.snapshot %}
+      <article class="dash-item">
+        <div class="chit-head">
+          <h3 class="chit-title">{{ s.title }}</h3>
+          <span class="badge badge--unverified">{{ _(reason_labels[f.reason]) }}</span>
+        </div>
+        <p class="dash-meta">{{ _('Scan result') if f.kind.value == 'scan' else _('Assistant answer') }}{% if f.created_at %} · {{ f.created_at.strftime('%d %b %Y, %H:%M') }} UTC{% endif %}{% if s.demo %} · {{ _('demo mode') }}{% endif %}</p>
+        {% if f.note %}<p class="req-msg">"{{ f.note }}"</p>{% endif %}
+        <div class="snapshot">
+          {% if f.kind.value == 'scan' %}
+          <p><strong>{{ _('Lane given:') }}</strong> {{ lanes_by_category[s.lane].stencil if s.lane in lanes_by_category else s.lane }} · {{ s.certainty }}</p>
+          <p>{{ s.advice }}</p>
+          {% if s.warnings %}<p><strong>{{ _('Warnings:') }}</strong> {{ s.warnings | join(' · ') }}</p>{% endif %}
+          {% else %}
+          <p><strong>{{ _('Question:') }}</strong> {{ s.question }}</p>
+          <p>{{ s.answer }}</p>
+          {% if s.sources %}<p><strong>{{ _('Sources:') }}</strong> {% for src in s.sources %}{{ src.title }}{% if src.page %} (p. {{ src.page }}){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+          {% endif %}
+          <p class="fineprint">{{ _('As sent by the reporter.') }}</p>
+        </div>
+        <form class="action-row reject-form" action="/admin/flags/{{ f.id }}/resolve" method="post">{{ csrf_field(request) }}
+          <label class="field"><span class="visually-hidden">{{ _('What you did') }}</span>
+            <input name="admin_note" maxlength="300" placeholder="{{ _('What you did, e.g. adjusted the prompt') }}"></label>
+          <button class="btn btn-primary btn-small" type="submit">{{ icon('check', 16) }} {{ _('Close report') }}</button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
