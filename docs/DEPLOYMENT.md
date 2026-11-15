@@ -1,6 +1,6 @@
 # Deployment and production checklist
 
-Production: https://project-stack-wheat.vercel.app (Vercel project `project-stack`, GitHub repo
+Production: https://reloop-india.vercel.app, also https://project-stack-wheat.vercel.app (Vercel project `project-stack`, GitHub repo
 `ajitkpal1-hub/Project-Stack`, Supabase project ref `ilkhnbdamwisdraxdzdo`, region Seoul).
 
 ## How deploys work

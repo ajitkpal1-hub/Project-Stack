@@ -6,7 +6,7 @@ RELOOP AI helps Indian households sort waste correctly, handle hazardous items s
 facilities and give usable items a second life. The pilot covers Thakurli, Dombivli and Kalyan
 (Kalyan-Dombivli Municipal Corporation, Maharashtra). Built for Project STACK.
 
-**Live:** https://project-stack-wheat.vercel.app
+**Live:** https://reloop-india.vercel.app (also https://project-stack-wheat.vercel.app)
 
 ## What it does
 

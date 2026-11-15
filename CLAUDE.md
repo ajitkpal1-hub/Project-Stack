@@ -79,7 +79,7 @@ uv pip install --python .venv -r requirements-dev.txt
 
 ## Current status
 - [x] Phase 1: architecture validated (FastAPI on Vercel), PoC app + health check, 4 tests passing locally
-- [x] Phase 1: deployed. Repo https://github.com/ajitkpal1-hub/Project-Stack, live https://project-stack-wheat.vercel.app (health verified 2026-11-15)
+- [x] Phase 1: deployed. Repo https://github.com/ajitkpal1-hub/Project-Stack, live https://reloop-india.vercel.app (added 2026-11-15; original https://project-stack-wheat.vercel.app still works)
 - [x] `APP_ENV=production` set in Vercel (health reports production, 2026-11-15)
 - [x] Phase 2: interface and navigation. "Municipal Bin Stencils" visual world (see DESIGN.md, PRODUCT.md, `.impeccable/surfaces/`), full homepage, shared shell, 7 honest "Arrives in Phase N" pages, 21 tests passing, finish review: ship (2026-11-15)
 - [x] Phase 3: AI waste classification. Claude vision via `reloop/services/classifier.py` (structured outputs, server-side refusal fallback), Python guardrails in `reloop/services/guardrails.py`, condition check before any donation advice, mock classifier for tests/demo. 56 tests passing (2026-11-15). Live with Claude (LLM_PROVIDER=anthropic, LLM_MODEL=claude-haiku-5-5) locally and on Vercel; scanner and assistant verified live 2026-11-15.
