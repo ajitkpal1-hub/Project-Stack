@@ -787,3 +787,8 @@ a.stat-tile:hover { border-color: var(--ink); }
 .report summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .report-form { margin-top: var(--space-3); padding: var(--space-4); border-radius: var(--radius-m); background: var(--surface); }
 .saved-steps { padding-left: 1.25rem; list-style: decimal; display: grid; gap: var(--space-1); color: var(--ink-soft); }
+.dash > * { min-width: 0; }
+@media (max-width: 40em) { .doc-table { min-width: 0; } .doc-table thead { display: none; } .doc-table tr { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); } .doc-table td { padding: 0; border: 0; } .doc-table td:first-child { grid-column: 1 / -1; } }
+.doc-unit { color: var(--ink-soft); font-size: 0.875rem; }
+@media (min-width: 40.01em) { .doc-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
+.stat-grid--small { margin-bottom: var(--space-3); }

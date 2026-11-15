@@ -24,7 +24,7 @@
               <strong>{% if d.source_url and d.source_url.lower().startswith(('https://', 'http://')) %}<a href="{{ d.source_url }}" target="_blank" rel="noopener noreferrer">{{ d.title }}</a>{% else %}{{ d.title }}{% endif %}</strong>
               <span class="dash-meta">{{ [d.publisher, d.published_on, d.file_name] | select | join(' · ') }}</span>
             </td>
-            <td>{{ d.chunk_count }}</td>
+            <td>{{ d.chunk_count }} <span class="doc-unit">{{ _('passages') }}</span></td>
             <td><span class="badge {{ 'badge--verified' if d.status == 'active' else 'badge--unverified' }}">{{ _('In use') if d.status == 'active' else _('Archived') }}</span></td>
             <td>
               <form class="inline-form" action="/admin/knowledge/{{ d.id }}/{{ 'archive' if d.status == 'active' else 'restore' }}" method="post">{{ csrf_field(request) }}
