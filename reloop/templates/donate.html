@@ -24,7 +24,7 @@
       </p>
       {% else %}
       {% if from_scan %}<p class="notice notice--ok">{{ icon('check', 18) }} {{ _("We've filled in what we could from your scan. Please check every field.") }}</p>{% endif %}
-      <form class="form-stack" action="/donate" method="post" enctype="multipart/form-data">
+      <form class="form-stack" action="/donate" method="post" enctype="multipart/form-data" data-loading="donate">
         {{ csrf_field(request) }}
         <label class="field">
           <span>{{ _('What are you giving away?') }}</span>

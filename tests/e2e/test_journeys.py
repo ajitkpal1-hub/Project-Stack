@@ -203,3 +203,30 @@ def test_computer_shows_upload_only(app, new_page):
     page = new_page(1440)
     page.goto(f"{app.url}/scan")
     assert page.is_visible("label.chute-pick--upload") and not page.is_visible("label.chute-pick--camera")
+
+
+def test_loading_card_shows_while_scanning_and_assistant_works(app, new_page, tmp_path):
+    hold = "document.querySelectorAll('form').forEach(f => f.addEventListener('submit', e => e.preventDefault()))"
+    photo = tmp_path / "bottle.jpg"
+    photo.write_bytes(make_image())
+    page = new_page(390)
+    page.goto(f"{app.url}/scan")
+    page.evaluate(hold)  # keep the page here so the in-progress state can be checked
+    page.set_input_files("form.chute input[name=photo]", str(photo))
+    page.wait_for_selector(".loading:not([hidden])", timeout=3000)
+    assert page.inner_text(".loading-title") == "Scanning your photo"
+    assert page.inner_text(".loading-step") == "Uploading your photo…"
+    page.wait_for_selector(".loading-step:has-text('Looking at the item')", timeout=5000)  # the message moves on
+    assert page.evaluate("document.body.classList.contains('is-loading')")
+
+    page.goto(f"{app.url}/assistant")
+    page.evaluate(hold)
+    page.fill("input[name=question]", "How do I get rid of paint?")
+    page.click("form.ask-form button[type=submit] >> nth=0")
+    page.wait_for_selector(".loading:not([hidden])", timeout=3000)
+    assert page.inner_text(".loading-title") == "Finding your answer"
+    page.click("form.ask-form button[type=submit] >> nth=0", force=True)  # a second tap is ignored
+    assert page.locator(".loading").count() == 1
+
+    page.goto(f"{app.url}/scan")  # a fresh page has no loading card showing
+    assert not page.is_visible(".loading")

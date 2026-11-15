@@ -223,6 +223,7 @@ Tactile, plain pills.
 ### Inputs / Fields
 - **The chute:** the one photo control. An ink slot with a bold prompt and two pill buttons: **Take a photo** (white, opens the rear camera, touch screens only) and **Upload a photo** (outlined, arrow pointing up; the only button on computers, shown white). Focus draws a 3px white outline around the focused button.
 - **Ready and busy states:** `/js/scan.js` turns the slot forest green ("Photo ready"), shows "Scanning your photo… this takes a few seconds." and starts the scan; the Identify button is hidden when the script runs and is the fallback without it.
+- **Loading card:** while a slow form works (scan, assistant, donate, condition, search), a white card with lift shadow over a faded page: a 48px green ring spinner, a Mukta 700 title ("Scanning your photo") and a soft-ink step line that moves on every 3 seconds. Honest stage text only, never a percentage or progress bar. Appears after 250ms so fast pages don't flicker.
 
 ### Navigation
 - **Desktop (62em+):** Mukta 500 ink links in a row, sage hover, active page marked by a 3px green bottom inset; Admin in soft ink; account as a hairline-bordered pill.
@@ -254,7 +255,7 @@ One family drawn on a 24px grid: 1.75 stroke, round caps and joins, `currentColo
 - **Do** build Operate pages (scanner, assistant, donate, explore, centres, dashboards) inside the shared shell: header, page head with lane bin, hazard strip, footer.
 - **Do** use the bin silhouette (larger top radius, lid band) for anything that represents a lane.
 - **Do** label demonstration data in place with a "Demo" tag or demo note.
-- **Do** keep motion to colour transitions of 160ms or less and the single press-down; respect reduced motion.
+- **Do** keep motion to colour transitions of 160ms or less, the single press-down, and the loading spinner; respect reduced motion (the spinner stops).
 - **Do** keep tap targets at 44px or more and the focus outline at 3px (ink on light, white on red and ink grounds).
 
 ### Don't:

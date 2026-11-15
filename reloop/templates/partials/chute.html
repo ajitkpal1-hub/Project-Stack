@@ -2,7 +2,7 @@
 {# The chute: take a photo with the camera or upload one. With /js/scan.js the scan starts as soon
    as a photo is chosen and shows a "Scanning" state; without it, the Identify button submits. #}
 {% macro chute(button_label, show_donate=false, show_note=false, disabled=false) -%}
-<form class="chute" action="/scan" method="post" enctype="multipart/form-data" data-autosubmit>
+<form class="chute" action="/scan" method="post" enctype="multipart/form-data" data-autosubmit data-loading="scan">
   {% if show_note %}
   <label class="chute-note">
     <span>{{ _('Anything we should know? (optional, add it before the photo)') }}</span>

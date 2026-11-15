@@ -55,7 +55,7 @@
           {% endif %}
 
           {% if result.needs_condition_check %}
-          <form class="condition" action="/scan/condition" method="post">
+          <form class="condition" action="/scan/condition" method="post" data-loading="condition">
             <fieldset>
               <legend>{{ _('Before we suggest donating: what condition is it in?') }}</legend>
               <p class="condition-hint">{{ _("We can't tell from a photo whether something works or is clean.") }}</p>

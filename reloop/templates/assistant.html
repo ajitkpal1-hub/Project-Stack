@@ -29,7 +29,7 @@
 
       {% if error %}<p class="notice notice--error" role="alert">{{ icon('alert', 18) }} {{ error }}</p>{% endif %}
 
-      <form class="ask-form" action="/assistant" method="post">
+      <form class="ask-form" action="/assistant" method="post" data-loading="assistant">
         <label for="question" class="ask-label">{{ _('Your question') }}</label>
         <div class="ask-row">
           <input id="question" name="question" type="text" maxlength="500" required autocomplete="off"
