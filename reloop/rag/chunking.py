@@ -18,6 +18,7 @@ MIN_CHUNK_CHARS = 80
 _MD_HEADING = re.compile(r"^#{1,6}\s+(.+)$")
 _PLAIN_HEADING = re.compile(r"^(?:[A-Z0-9][A-Z0-9 ,.\-()/&]{6,80}|\d+(?:\.\d+)*\.?\s+[A-Z][^.]{3,80})$")
 _LINE_JOIN = re.compile(r"\n(?!\s*(?:\([a-zA-Z0-9]{1,4}\)|[•\-–]|\d{1,2}[.)])\s)")
+_DEVANAGARI = re.compile(r"[ऀ-ॿ]")  # Devanagari block
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?;:])\s+(?=[A-Z0-9(\"'])")
 
 
@@ -110,3 +111,18 @@ def chunk_pages(pages: list[str]) -> list[Chunk]:
     if buf:
         emit(continue_section=False)
     return chunks
+
+
+def drop_mostly_devanagari(chunks: list[Chunk], threshold: float = 0.3) -> list[Chunk]:
+    """Keep only chunks that are mostly not Devanagari, renumbered from 0.
+
+    For bilingual gazettes whose Hindi half uses legacy font encodings that extract as
+    scrambled text. The same PDF carries the English text, so nothing is lost. Turned
+    on per document with english_only = true in knowledge/manifest.toml.
+    """
+    kept = []
+    for c in chunks:
+        letters = len(re.sub(r"\s", "", c.content)) or 1
+        if len(_DEVANAGARI.findall(c.content)) / letters <= threshold:
+            kept.append(c.model_copy(update={"index": len(kept)}))
+    return kept

@@ -22,22 +22,27 @@ sys.path.insert(0, str(ROOT))
 
 from reloop.config import get_settings  # noqa: E402
 from reloop.models.knowledge import DocumentMeta  # noqa: E402
-from reloop.rag.chunking import SUPPORTED_SUFFIXES, chunk_pages, extract_pages  # noqa: E402
+from reloop.rag.chunking import SUPPORTED_SUFFIXES, chunk_pages, drop_mostly_devanagari, extract_pages  # noqa: E402
 from reloop.rag.embeddings import get_embedder  # noqa: E402
 from reloop.rag.store import get_store, sha256_of  # noqa: E402
 
 KNOWLEDGE_DIR = ROOT / "knowledge"
 
 
-def load_manifest(path: Path) -> dict[str, DocumentMeta]:
+def load_manifest(path: Path) -> tuple[dict[str, DocumentMeta], set[str]]:
+    """Returns document facts by file name, plus the files marked english_only."""
     if not path.exists():
-        return {}
+        return {}, set()
     data = tomllib.loads(path.read_text(encoding="utf-8"))
-    out = {}
+    out, english_only = {}, set()
     for entry in data.get("document", []):
+        entry = dict(entry)
+        flag = bool(entry.pop("english_only", False))  # loading option, not stored with the document
         meta = DocumentMeta(**entry)
         out[meta.file_name] = meta
-    return out
+        if flag:
+            english_only.add(meta.file_name)
+    return out, english_only
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -47,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     folder: Path = args.dir
-    manifest = load_manifest(folder / "manifest.toml")
+    manifest, english_only = load_manifest(folder / "manifest.toml")
     files = sorted(p for p in folder.iterdir() if p.suffix.lower() in SUPPORTED_SUFFIXES and p.name.lower() != "readme.md")
     if not files:
         print(f"No PDF/TXT/MD files found in {folder}. The knowledge base stays empty.")
@@ -63,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     settings = get_settings()
     embedder = store = None
     if not args.dry_run:
-        embedder, store = get_embedder(settings), get_store(settings)
+        embedder, store = get_embedder(settings, bulk=True), get_store(settings)
         if embedder is None or store is None:
             print("Missing configuration. Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, EMBEDDING_PROVIDER=voyage and EMBEDDING_API_KEY in .env.")
             return 1
@@ -72,11 +77,20 @@ def main(argv: list[str] | None = None) -> int:
         meta = manifest[path.name]
         pages = extract_pages(path)
         chunks = chunk_pages(pages)
+        dropped = 0
+        if path.name in english_only:
+            before = len(chunks)
+            chunks = drop_mostly_devanagari(chunks)
+            dropped = before - len(chunks)
         chars = sum(len(c.content) for c in chunks)
+        if not chunks and dropped:
+            print(f"! {path.name}: only Hindi text found and english_only is set. Skipped.")
+            continue
         if not chunks:
             print(f"! {path.name}: no text extracted (scanned PDF? it needs OCR first). Skipped.")
             continue
-        print(f"- {path.name}: {len(pages)} page(s), {len(chunks)} chunks, {chars:,} characters")
+        note = f" (skipped {dropped} Hindi chunks: english_only)" if dropped else ""
+        print(f"- {path.name}: {len(pages)} page(s), {len(chunks)} chunks, {chars:,} characters{note}")
         if args.dry_run:
             continue
         embeddings = embedder.embed([c.content for c in chunks], input_type="document")

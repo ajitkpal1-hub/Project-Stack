@@ -14,7 +14,7 @@ from reloop.config import Settings
 from reloop.models.knowledge import AnswerMode, AnswerSegment, DocumentMeta
 from reloop.rag.answer import ClaudeGenerator, GenerationError, KnowledgeAssistant, get_generator
 from reloop.rag.chunking import chunk_pages, clean_text, extract_pages
-from reloop.rag.embeddings import DIMENSIONS, HashEmbedder, VoyageEmbedder, get_embedder
+from reloop.rag.embeddings import DIMENSIONS, EmbeddingError, HashEmbedder, VoyageEmbedder, get_embedder
 from reloop.rag.store import InMemoryStore, StoreError, SupabaseStore, get_store, sha256_of
 from reloop.routes import assistant as assistant_route
 from reloop.web import create_app
@@ -201,6 +201,39 @@ def test_voyage_request_shape(monkeypatch):
     assert seen["auth"] == "Bearer key-123"
 
 
+def test_voyage_bulk_waits_out_rate_limit(monkeypatch):
+    calls, waits = [], []
+
+    def fake_post(url, json, headers, timeout):
+        calls.append(json["input"])
+        if len(calls) == 1:
+            return httpx.Response(429, headers={"retry-after": "5"})
+        return httpx.Response(200, json={"data": [{"index": i, "embedding": [float(i)]} for i in range(len(json["input"]))]})
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    emb = VoyageEmbedder("k", max_retries=3, max_batch_chars=10, sleep=waits.append)
+    out = emb.embed(["aaaaaa", "bbbbbb", "cc"], "document")
+    assert out == [[0.0], [0.0], [1.0]]
+    assert calls == [["aaaaaa"], ["aaaaaa"], ["bbbbbb", "cc"]]  # split by size, first batch retried
+    assert waits == [20.0]  # at least 20s even if Retry-After is shorter
+
+
+def test_voyage_live_rate_limit_fails_fast(monkeypatch):
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: httpx.Response(429))
+    waits = []
+    with pytest.raises(EmbeddingError, match="rate limit"):
+        VoyageEmbedder("k", sleep=waits.append).embed(["a"], "query")
+    assert waits == []
+
+
+def test_voyage_bulk_gives_up_after_retries(monkeypatch):
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: httpx.Response(429))
+    waits = []
+    with pytest.raises(EmbeddingError):
+        VoyageEmbedder("k", max_retries=2, sleep=waits.append).embed(["a"], "document")
+    assert len(waits) == 2
+
+
 def test_supabase_search_uses_rpc_and_maps_rows(monkeypatch):
     calls = []
 
@@ -238,6 +271,31 @@ def test_ingest_requires_manifest_entry(tmp_path, capsys):
     (tmp_path / "orphan.txt").write_text("Some guidance text that is long enough to make one chunk of content. " * 3)
     assert ingest.main(["--dir", str(tmp_path), "--dry-run"]) == 1
     assert "orphan.txt" in capsys.readouterr().out
+
+
+def test_drop_mostly_devanagari_keeps_english_and_renumbers():
+    from reloop.models.knowledge import Chunk
+    from reloop.rag.chunking import drop_mostly_devanagari
+
+    chunks = [Chunk(index=0, content="ऄसाधारण भाग खण्ड रजजस्ट्री"), Chunk(index=1, content="Every producer shall register on the portal."),
+              Chunk(index=2, content="Bulk generators (थोक) must segregate waste at source.")]
+    kept = drop_mostly_devanagari(chunks)
+    assert [c.content[:5] for c in kept] == ["Every", "Bulk "]
+    assert [c.index for c in kept] == [0, 1]
+
+
+def test_ingest_english_only_flag_is_not_stored_as_metadata(tmp_path, capsys):
+    from scripts import ingest
+
+    (tmp_path / "gazette.txt").write_text(
+        "असाधारण भाग खण्ड रजिस्ट्री संख्या प्रकाशित अधिसूचना नियम " * 30 + "\n\n" +
+        "Every producer of electrical equipment shall register on the portal and file returns. " * 3, encoding="utf-8")
+    (tmp_path / "manifest.toml").write_text('[[document]]\nfile_name = "gazette.txt"\ntitle = "Gazette"\nenglish_only = true\n', encoding="utf-8")
+    manifest, english_only = ingest.load_manifest(tmp_path / "manifest.toml")
+    assert english_only == {"gazette.txt"}
+    assert "english_only" not in manifest["gazette.txt"].model_dump()
+    assert ingest.main(["--dir", str(tmp_path), "--dry-run"]) == 0
+    assert "skipped 1 Hindi chunks" in capsys.readouterr().out
 
 
 # ---------- routes ----------
