@@ -17,10 +17,13 @@ from fastapi import Request
 
 from reloop.config import get_settings
 from reloop.database.donations import DonationRepo, SupabaseDonationRepo
+from reloop.database.partners import PartnerRepo, SupabasePartnerRepo
 from reloop.database.supabase import AuthError, Session, SupabaseClient, SupabaseError
 from reloop.models.donations import User
 from reloop.security import SESSION_COOKIE, clear_session, decode_session, set_session
 from reloop.services.donations import DonationService
+from reloop.services.geo import Geo, get_geo
+from reloop.services.partners import PartnerService
 
 log = logging.getLogger("reloop.auth")
 
@@ -36,6 +39,9 @@ class AuthBackend(Protocol):
 # Test hooks: swap in fakes without touching settings.
 _auth_override: AuthBackend | None = None
 _repo_override: DonationRepo | None = None
+_partner_repo_override: PartnerRepo | None = None
+_geo_override: Geo | None = None
+_geo_disabled = False  # tests switch the map service off entirely
 
 # Per-instance cache of confirmed tokens, so a page with several lookups checks once.
 _VERIFIED: dict[str, tuple[float, dict]] = {}
@@ -58,6 +64,25 @@ def donation_service() -> DonationService | None:
         return DonationService(_repo_override)
     client = _client()
     return DonationService(SupabaseDonationRepo(client)) if client else None
+
+
+def partner_repo() -> PartnerRepo | None:
+    if _partner_repo_override is not None:
+        return _partner_repo_override
+    client = _client()
+    return SupabasePartnerRepo(client) if client else None
+
+
+def geo() -> Geo | None:
+    if _geo_override is not None:
+        return _geo_override
+    if _geo_disabled:
+        return None
+    return get_geo(get_settings().osm_user_agent.strip())
+
+
+def partner_service() -> PartnerService:
+    return PartnerService(partner_repo(), geo())
 
 
 def accounts_ready() -> bool:

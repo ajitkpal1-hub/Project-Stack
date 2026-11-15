@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     rag_top_k: int = 6
     rag_min_similarity: float = 0.35  # below this a passage is not treated as relevant
     maps_api_key: str = ""
+    osm_user_agent: str = ""  # identifies the app to OpenStreetMap; generic default, no personal details
     admin_emails: str = ""  # comma-separated; these accounts can use the admin queue
 
     @property

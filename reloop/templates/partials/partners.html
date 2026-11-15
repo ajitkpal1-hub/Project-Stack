@@ -1,0 +1,92 @@
+{% from "partials/icons.html" import icon %}
+{# Shared pieces for the directory pages. #}
+
+{% macro maps_link(lat, lon, query) -%}
+{%- if lat is not none and lon is not none -%}
+https://www.google.com/maps/search/?api=1&amp;query={{ lat }}%2C{{ lon }}
+{%- else -%}
+https://www.google.com/maps/search/?api=1&amp;query={{ query|urlencode }}
+{%- endif -%}
+{%- endmacro %}
+
+{% macro partner_fields(form, lanes, kind_labels, category_labels, admin=false) -%}
+<label class="field">
+  <span>{{ _('Name of the place or organisation') }}</span>
+  <input name="name" value="{{ form.name or '' }}" required minlength="2" maxlength="120">
+</label>
+<label class="field">
+  <span>{{ _('What kind of place is it?') }}</span>
+  <select name="kind" required>
+    <option value="">{{ _('Choose one') }}</option>
+    {% for k, label in kind_labels.items() %}
+    <option value="{{ k.value }}" {% if form.kind == k.value %}selected{% endif %}>{{ _(label) }}</option>
+    {% endfor %}
+  </select>
+</label>
+<fieldset class="field">
+  <legend>{{ _('What does it accept?') }}</legend>
+  <div class="check-grid">
+    {% for lane in lanes if lane.category.value != 'unsure' %}
+    <label class="option"><input type="checkbox" name="materials" value="{{ lane.category.value }}" {% if lane.category.value in (form.materials or []) %}checked{% endif %}> <span>{{ _(lane.name) }}</span></label>
+    {% endfor %}
+  </div>
+</fieldset>
+<fieldset class="field">
+  <legend>{{ _('Donations it accepts (NGOs and donation centres only)') }}</legend>
+  <div class="check-grid">
+    {% for c, label in category_labels.items() %}
+    <label class="option"><input type="checkbox" name="donation_categories" value="{{ c.value }}" {% if c.value in (form.donation_categories or []) %}checked{% endif %}> <span>{{ _(label) }}</span></label>
+    {% endfor %}
+  </div>
+</fieldset>
+<label class="field">
+  <span>{{ _('Address (optional)') }}</span>
+  <input name="address" value="{{ form.address or '' }}" maxlength="300" placeholder="{{ _('Shop number, road, landmark') }}">
+</label>
+<div class="field-row">
+  <label class="field"><span>{{ _('Locality') }}</span>
+    <input name="locality" value="{{ form.locality or '' }}" required minlength="2" maxlength="80" placeholder="{{ _('e.g. Dombivli East') }}"></label>
+  <label class="field"><span>{{ _('City (optional)') }}</span>
+    <input name="city" value="{{ form.city or '' }}" maxlength="80" placeholder="{{ _('e.g. Kalyan') }}"></label>
+</div>
+<div class="field-row">
+  <label class="field"><span>{{ _('PIN code') }}</span>
+    <input name="pin_code" value="{{ form.pin_code or '' }}" required inputmode="numeric" pattern="[1-9][0-9]{5}" maxlength="6" placeholder="421201"></label>
+  <label class="field"><span>{{ _("Organisation's public phone (optional)") }}</span>
+    <input name="phone" value="{{ form.phone or '' }}" maxlength="40" inputmode="tel"></label>
+</div>
+<label class="field">
+  <span>{{ _('Website (optional)') }}</span>
+  <input name="website" type="url" value="{{ form.website or '' }}" maxlength="300" placeholder="https://">
+</label>
+<label class="field">
+  <span>{{ _('Source link') }}{% if not admin %} {{ _('(optional, but it helps us verify)') }}{% endif %}</span>
+  <input name="source_url" type="url" value="{{ form.source_url or '' }}" maxlength="300" placeholder="https://" {% if admin %}required{% endif %}>
+  <small>{{ _("Where this information can be checked: an official list (municipal, MPCB, CPCB) or the organisation's own page.") }}</small>
+</label>
+<div class="field-row">
+  <label class="field"><span>{{ _('Latitude (optional)') }}</span>
+    <input name="latitude" value="{{ form.latitude or '' }}" inputmode="decimal" maxlength="20" placeholder="19.2141"></label>
+  <label class="field"><span>{{ _('Longitude (optional)') }}</span>
+    <input name="longitude" value="{{ form.longitude or '' }}" inputmode="decimal" maxlength="20" placeholder="73.0922"></label>
+</div>
+{%- endmacro %}
+
+{% macro entry_card(e, kind_labels, lanes_by_category, category_labels, verified_badge=true) -%}
+<article class="place place--verified">
+  <div class="place-head">
+    <h3 class="place-name">{{ e.name }}</h3>
+    {% if verified_badge %}<span class="badge badge--verified">{{ icon('check', 14) }} {{ _('Verified') }}</span>{% endif %}
+  </div>
+  <p class="place-kind">{{ _(kind_labels[e.kind]) }}{% if e.distance_km is not none %} · {{ _('%(km)s km away', km=e.distance_km) }}{% endif %}</p>
+  {% if e.materials %}<p class="place-chips">{% for m in e.materials %}<span class="chip lane--{{ m.value }}">{{ lanes_by_category[m].stencil }}</span>{% endfor %}</p>{% endif %}
+  {% if e.donation_categories %}<p class="place-accepts">{{ _('Accepts donations of:') }} {% for c in e.donation_categories %}{{ _(category_labels[c]) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  <p class="place-addr">{{ [e.address, e.locality, e.city, e.pin_code] | select | join(', ') }}</p>
+  <p class="place-links">
+    <a href="{{ maps_link(e.latitude, e.longitude, [e.name, e.address, e.locality, e.pin_code] | select | join(', ')) }}" target="_blank" rel="noopener noreferrer">{{ icon('pin', 16) }} {{ _('Open in Maps') }}</a>
+    {% if e.phone %}<a href="tel:{{ e.phone | replace(' ', '') }}">{{ e.phone }}</a>{% endif %}
+    {% if e.website and e.website.lower().startswith(('https://', 'http://')) %}<a href="{{ e.website }}" target="_blank" rel="noopener noreferrer">{{ _('Website') }}</a>{% endif %}
+    {% if e.source_url and e.source_url.lower().startswith(('https://', 'http://')) %}<a href="{{ e.source_url }}" target="_blank" rel="noopener noreferrer">{{ _('Source') }}</a>{% endif %}
+  </p>
+</article>
+{%- endmacro %}

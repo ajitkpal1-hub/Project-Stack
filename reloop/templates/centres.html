@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head %}
+{% from "partials/partners.html" import entry_card, maps_link %}
+{% set page = pages_by_slug['centres'] %}
+{% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
+{% block description %}{{ _(page.purpose) }}{% endblock %}
+
+{% block main %}
+{% set lane = lanes_by_category.get(material) if material else none %}
+{{ page_head(_(page.title), _(page.purpose), lane.category.value if lane else 'e-waste', lane.stencil if lane else 'FIND') }}
+
+<section class="section section--tight">
+  <div class="wrap">
+    <form class="filter-bar" action="/centres" method="get" role="search">
+      <label class="field">
+        <span>{{ _('What do you need to get rid of?') }}</span>
+        <select name="material">
+          <option value="">{{ _('Anything') }}</option>
+          {% for l in lanes if l.category.value != 'unsure' %}
+          <option value="{{ l.category.value }}" {% if material == l.category.value %}selected{% endif %}>{{ _(l.name) }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">
+        <span>{{ _('Locality or PIN code') }}</span>
+        <input name="place" value="{{ place }}" maxlength="80" placeholder="{{ _('e.g. Dombivli East or 421201') }}">
+      </label>
+      <button class="btn btn-primary" type="submit">{{ _('Search') }} {{ icon('arrow', 18) }}</button>
+    </form>
+
+    {% if not result %}
+    <div class="empty-state">
+      <h2 class="display-3">{{ _('Search near you') }}</h2>
+      <p>{{ _('Enter your locality or 6-digit PIN code. We show places our team has verified first, then nearby places from OpenStreetMap that nobody has checked yet.') }}</p>
+    </div>
+    {% else %}
+    {% for n in result.notices %}<p class="notice">{{ icon('alert', 18) }} {{ n }}</p>{% endfor %}
+    {% if result.located %}<p class="result-count">{{ _('Near:') }} {{ result.located.label }}</p>{% endif %}
+
+    <section class="place-group" aria-labelledby="verified-title">
+      <h2 id="verified-title" class="display-3">{{ icon('check', 20) }} {{ _('Verified by RELOOP') }}</h2>
+      <p class="group-note">{{ _('Our team checked each of these against an official list or the organisation itself. Call ahead before you go.') }}</p>
+      {% if result.verified %}
+      <div class="place-grid">
+        {% for e in result.verified %}{{ entry_card(e, kind_labels, lanes_by_category, category_labels) }}{% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-line">{{ _("We haven't verified any places here yet.") }}{% if viewer.signed_in %} <a href="/centres/suggest?locality={{ place|urlencode }}&amp;material={{ material }}">{{ _('Know one? Suggest it.') }}</a>{% endif %}</p>
+      {% endif %}
+    </section>
+
+    {% if result.located %}
+    <section class="place-group place-group--unverified" aria-labelledby="osm-title">
+      <h2 id="osm-title" class="display-3">{{ icon('alert', 20) }} {{ _('From OpenStreetMap: not verified') }}</h2>
+      <p class="group-note">{{ _("These come from the open map, not from our team. They may be closed, moved or not accept what you have. Please check before you go.") }}</p>
+      {% if result.unverified %}
+      <div class="place-grid">
+        {% for p in result.unverified %}
+        <article class="place place--unverified">
+          <div class="place-head"><h3 class="place-name">{{ p.name }}</h3><span class="badge badge--unverified">{{ _('Not verified') }}</span></div>
+          <p class="place-kind">{{ _(p.kind_label) }}{% if p.distance_km is not none %} · {{ _('%(km)s km away', km=p.distance_km) }}{% endif %}</p>
+          {% if p.accepts %}<p class="place-accepts">{{ _('Map says it takes:') }} {{ p.accepts | join(', ') }}</p>{% endif %}
+          {% if p.address %}<p class="place-addr">{{ p.address }}</p>{% endif %}
+          <p class="place-links">
+            <a href="{{ maps_link(p.latitude, p.longitude, '') }}" target="_blank" rel="noopener noreferrer">{{ icon('pin', 16) }} {{ _('Open in Maps') }}</a>
+            <a href="https://www.openstreetmap.org/{{ p.osm_id }}" target="_blank" rel="noopener noreferrer">{{ _('View on OpenStreetMap') }}</a>
+            {% if viewer.user and viewer.user.is_admin %}
+            <a href="/admin/partners?name={{ p.name|urlencode }}&amp;latitude={{ p.latitude }}&amp;longitude={{ p.longitude }}&amp;locality={{ place|urlencode }}">{{ _('Check and add') }}</a>
+            {% elif viewer.signed_in %}
+            <a href="/centres/suggest?name={{ p.name|urlencode }}&amp;latitude={{ p.latitude }}&amp;longitude={{ p.longitude }}&amp;locality={{ place|urlencode }}&amp;material={{ material }}">{{ _('Suggest for verification') }}</a>
+            {% endif %}
+          </p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-line">{{ _('OpenStreetMap has no matching places mapped near here yet.') }}</p>
+      {% endif %}
+      <p class="fineprint">{{ _('Map data') }} &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">{{ _('OpenStreetMap contributors') }}</a></p>
+    </section>
+    {% endif %}
+    {% endif %}
+
+    <aside class="panel panel--soon suggest-panel">
+      <h2 class="display-3">{{ _('Know a good place?') }}</h2>
+      <p>{{ _('Tell us about a recycler, e-waste collector, kabadiwala or NGO near you. Our team checks every suggestion before it appears here.') }}</p>
+      <a class="btn btn-quiet" href="/centres/suggest">{{ _('Suggest a place') }}</a>
+    </aside>
+  </div>
+</section>
+{% endblock %}

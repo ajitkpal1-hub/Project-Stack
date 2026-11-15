@@ -43,8 +43,7 @@ def test_every_public_page_renders_with_nav(client, page):
     response = client.get(page.path)
     assert response.status_code == 200
     assert page.title in response.text
-    if page.slug == "centres":  # the only page still waiting for its phase
-        assert f"Arrives in Phase {page.phase}" in response.text
+    assert "Arrives in Phase" not in response.text  # every public page is live now
     for path in PUBLIC_NAV:
         assert f'href="{path}"' in response.text
 

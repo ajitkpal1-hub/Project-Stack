@@ -16,6 +16,8 @@ from reloop.agents.pipeline import WastePipeline
 from reloop.models.classification import CONDITION_LABELS, Certainty, Condition
 from reloop.models.pipeline import DonationStatus, PipelineResult, StepStatus
 from reloop.rag.answer import get_assistant
+from reloop.routes.deps import partner_repo
+from reloop.services.partners import DirectoryPartners
 from reloop.services.classifier import Classifier, ClassifierUnavailable, get_classifier
 from reloop.templating import templates
 from reloop.utils.images import MAX_UPLOAD_BYTES, ImageValidationError, prepare_image
@@ -41,7 +43,8 @@ def _classifier():
 
 def _pipeline(classifier: Classifier | None) -> WastePipeline:
     assistant = _assistant_override if _assistant_override is not None else get_assistant(get_settings())
-    return WastePipeline(classifier, assistant)
+    repo = partner_repo()
+    return WastePipeline(classifier, assistant, DirectoryPartners(repo) if repo else None)
 
 
 def _render(request: Request, status_code: int = 200, **ctx) -> HTMLResponse:

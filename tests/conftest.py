@@ -19,6 +19,8 @@ def _isolate_settings(monkeypatch):
     monkeypatch.setitem(Settings.model_config, "env_file", None)
     for name in _SERVICE_VARS:
         monkeypatch.delenv(name, raising=False)
+    from reloop.routes import deps
+    monkeypatch.setattr(deps, "_geo_disabled", True)
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error %}
+{% from "partials/partners.html" import partner_fields, entry_card %}
+{% block title %}{{ _('Directory admin') }} | RELOOP AI{% endblock %}
+
+{% macro action(url, label, cls='btn-quiet') -%}
+<form class="inline-form" action="{{ url }}" method="post">{{ csrf_field(request) }}<button class="btn {{ cls }} btn-small" type="submit">{{ label }}</button></form>
+{%- endmacro %}
+
+{% block main %}
+{{ page_head(_('Directory admin'), _('Add verified places and review suggestions from members.'), 'hazardous', 'ADMIN') }}
+
+<section class="section section--tight">
+  <div class="wrap dash">
+    {{ form_error(error) }}
+    {% if pending is none %}
+    <p class="notice notice--error">{{ icon('alert', 18) }} {{ _("This page is only for RELOOP admins. Your account doesn't have admin access.") }}</p>
+    {% else %}
+    <p class="action-row"><a class="btn btn-quiet" href="/admin">{{ _('Listing queue') }}</a></p>
+
+    <h2 class="display-2">{{ _('Suggestions to review') }}</h2>
+    {% if not pending %}<p class="empty-line">{{ icon('check', 18) }} {{ _('No suggestions waiting.') }}</p>{% endif %}
+    <div class="dash-list">
+      {% for e in pending %}
+      <div class="dash-item">
+        {{ entry_card(e, kind_labels, lanes_by_category, category_labels, verified_badge=false) }}
+        {% if not e.source_url %}<p class="dash-note dash-note--bad">{{ _('No source link. Check it yourself, add it below with a source, then reject this copy.') }}</p>{% endif %}
+        <div class="action-row">
+          {% if e.source_url %}{{ action('/admin/partners/' ~ e.id ~ '/verify', _('Verify'), 'btn-primary') }}{% endif %}
+          {{ action('/admin/partners/' ~ e.id ~ '/reject', _('Reject')) }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h2 class="display-2 dash-section">{{ _('Add a verified place') }}</h2>
+    <div class="panel">
+      <p class="group-note">{{ _('Only add places you have checked yourself. The source link is required and shown to the public.') }}</p>
+      <form class="form-stack" action="/admin/partners" method="post">
+        {{ csrf_field(request) }}
+        {{ partner_fields(form, lanes, kind_labels, category_labels, admin=true) }}
+        <button class="btn btn-primary" type="submit">{{ _('Add to directory') }} {{ icon('arrow', 18) }}</button>
+      </form>
+    </div>
+
+    <h2 class="display-2 dash-section">{{ _('Verified directory') }} ({{ verified|length }})</h2>
+    {% if not verified %}<p class="empty-line">{{ _('Nothing verified yet.') }}</p>{% endif %}
+    <div class="dash-list">
+      {% for e in verified %}
+      <div class="dash-item">
+        {{ entry_card(e, kind_labels, lanes_by_category, category_labels) }}
+        <div class="action-row">{{ action('/admin/partners/' ~ e.id ~ '/remove', _('Remove')) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

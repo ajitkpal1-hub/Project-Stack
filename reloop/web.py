@@ -11,7 +11,7 @@ from starlette.exceptions import HTTPException
 from reloop import __version__
 from reloop.config import get_settings
 from reloop.models.categories import LANES
-from reloop.routes import account, assistant, donations, pages, scan
+from reloop.routes import account, assistant, centres, donations, pages, scan
 from reloop.routes.deps import LoginRequired, login_url, viewer
 from reloop.security import SessionMiddleware, csrf_field, take_flash
 from reloop.templating import templates
@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SessionMiddleware)
     app.include_router(account.router)
     app.include_router(donations.router)
+    app.include_router(centres.router)
     app.include_router(pages.router)
     app.include_router(scan.router)
     app.include_router(assistant.router)

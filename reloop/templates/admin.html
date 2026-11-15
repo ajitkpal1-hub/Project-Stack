@@ -9,6 +9,7 @@
 <section class="section section--tight">
   <div class="wrap dash">
     {{ form_error(error) }}
+    {% if queue is not none %}<p class="action-row"><a class="btn btn-quiet" href="/admin/partners">{{ _('Recycling and donation directory') }} {{ icon('arrow', 18) }}</a></p>{% endif %}
     {% if queue is none %}
     <p class="notice notice--error">{{ icon('alert', 18) }} {{ _("This page is only for RELOOP admins. Your account doesn't have admin access.") }}</p>
     {% elif not queue %}

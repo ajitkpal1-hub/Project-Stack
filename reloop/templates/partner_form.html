@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% from "partials/donations.html" import page_head, form_error %}
+{% from "partials/partners.html" import partner_fields %}
+{% block title %}{{ _('Suggest a place') }} | RELOOP AI{% endblock %}
+
+{% block main %}
+{{ page_head(_('Suggest a place'), _('Tell us about a recycler, collector or NGO. It stays hidden until our team verifies it.'), 'e-waste', 'FIND') }}
+
+<section class="section section--tight">
+  <div class="wrap feature-grid">
+    <div class="panel">
+      {{ form_error(error) }}
+      {% if not viewer.signed_in %}
+      <h2 class="display-3">{{ _('Log in to suggest a place') }}</h2>
+      <p>{{ _('We ask for an account so we can follow up on suggestions.') }}</p>
+      <p class="action-row"><a class="btn btn-primary" href="{{ login_link }}">{{ _('Log in') }} {{ icon('arrow', 18) }}</a></p>
+      {% else %}
+      <form class="form-stack" action="/centres/suggest" method="post">
+        {{ csrf_field(request) }}
+        {{ partner_fields(form, lanes, kind_labels, category_labels) }}
+        <button class="btn btn-primary" type="submit" {% if not directory_ready %}disabled{% endif %}>{{ _('Send suggestion') }} {{ icon('arrow', 18) }}</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="panel panel--soon">
+      <h2 class="display-3">{{ _('What happens next') }}</h2>
+      <ul class="checklist">
+        <li>{{ icon('check', 18) }}<span>{{ _('A RELOOP admin checks the place against an official list or with the organisation.') }}</span></li>
+        <li>{{ icon('check', 18) }}<span>{{ _('Once verified, it appears in search with a Verified badge.') }}</span></li>
+        <li>{{ icon('alert', 18) }}<span>{{ _("Please only suggest organisations, not private homes, and only their public contact details.") }}</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

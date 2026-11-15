@@ -104,7 +104,7 @@
             <p class="donation-sub">{{ _('Verified partners near you:') }}</p>
             <ul>{% for pt in d.partners %}<li><strong>{{ pt.name }}</strong>, {{ pt.locality }}</li>{% endfor %}</ul>
             {% else %}
-            <p class="fineprint">{{ _("We haven't verified any donation partners in your area yet, so we don't name any. Verified partners arrive in Phase 7.") }}</p>
+            <p class="fineprint">{{ _("We haven't verified any donation partners for this kind of item yet, so we don't name any.") }} <a href="/centres?material={{ result.primary_category.value }}">{{ _('Search the directory') }}</a></p>
             {% endif %}
             {% endif %}
           </section>
@@ -131,7 +131,7 @@
             <a class="btn btn-primary" href="/donate?title={{ result.identified_item|urlencode }}&amp;lane={{ result.primary_category.value }}&amp;condition=works_clean">{{ icon('gift', 18) }} {{ _('List it for donation') }}</a>
             {% endif %}
             {% if result.recommended_action.value in ['special_handling', 'recycle', 'dispose'] %}
-            <a class="btn btn-quiet" href="/centres">{{ icon('pin', 18) }} {{ _('Find a collection point') }}</a>
+            <a class="btn btn-quiet" href="/centres?material={{ result.primary_category.value }}">{{ icon('pin', 18) }} {{ _('Find a collection point') }}</a>
             {% endif %}
             <a class="btn btn-quiet" href="/#lane-{{ lane.category.value }}">{{ _('About the %(lane)s lane', lane=lane.stencil | lower) }}</a>
           </div>

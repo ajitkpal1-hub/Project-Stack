@@ -117,3 +117,51 @@ class InMemoryDonationRepo:
 
     def delete_photo(self, path: str) -> None:
         self.photos.pop(path, None)
+
+
+class InMemoryPartnerRepo:
+    """Mirrors the partners table's RLS rules for tests."""
+
+    def __init__(self) -> None:
+        self.rows: dict[str, "DirectoryEntry"] = {}
+
+    def verified(self, material=None, limit=500):
+        out = [r for r in self.rows.values() if r.status.value == "verified" and (not material or material in [m.value for m in r.materials])]
+        return sorted(out, key=lambda r: r.name)[:limit]
+
+    def verified_ngos(self, donation_categories, limit=5):
+        want = set(donation_categories)
+        out = [r for r in self.rows.values() if r.status.value == "verified" and r.kind.value == "ngo"
+               and want & {c.value for c in r.donation_categories}]
+        return sorted(out, key=lambda r: r.name)[:limit]
+
+    def insert_suggestion(self, user_id, form, token):
+        from reloop.models.partners import DirectoryEntry
+        entry = DirectoryEntry(id=str(uuid.uuid4()), submitted_by=user_id, **form.model_dump())
+        self.rows[entry.id] = entry
+        return entry
+
+    def insert_verified(self, form):
+        from reloop.models.partners import DirectoryEntry, PartnerStatus
+        if not form.source_url:
+            raise SupabaseError("Something went wrong saving or loading that. Please try again.")  # DB check constraint
+        entry = DirectoryEntry(id=str(uuid.uuid4()), status=PartnerStatus.VERIFIED, **form.model_dump())
+        self.rows[entry.id] = entry
+        return entry
+
+    def pending(self):
+        return [r for r in self.rows.values() if r.status.value == "pending"]
+
+    def by_submitter(self, user_id, token):
+        return [r for r in self.rows.values() if r.submitted_by == user_id]
+
+    def get(self, entry_id):
+        return self.rows.get(entry_id)
+
+    def set_status(self, entry_id, status):
+        if status.value == "verified" and not self.rows[entry_id].source_url:
+            raise SupabaseError("Something went wrong saving or loading that. Please try again.")
+        self.rows[entry_id] = self.rows[entry_id].model_copy(update={"status": status})
+
+    def delete(self, entry_id):
+        self.rows.pop(entry_id, None)
