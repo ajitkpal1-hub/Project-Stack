@@ -23,6 +23,7 @@ in about a minute. The Python version is pinned in `.python-version`; dependenci
 | `EMBEDDING_PROVIDER` | `voyage` | |
 | `EMBEDDING_API_KEY` | Voyage key | mark Sensitive; needs a payment method on file |
 | `OSM_USER_AGENT` | optional | defaults to a generic app name |
+| `VOICE_TOOL_SECRET` | 32+ random characters (optional) | mark Sensitive; turns on `/api/voice/*` for the ElevenLabs agent. Same value goes in the agent's tool header `X-Reloop-Voice-Key` |
 
 Changing a variable only takes effect on the next deploy: push, or Deployments → ⋯ → Redeploy.
 

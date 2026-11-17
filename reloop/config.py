@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     rag_min_similarity: float = 0.35  # below this a passage is not treated as relevant
     osm_user_agent: str = ""  # identifies the app to OpenStreetMap; generic default, no personal details
     admin_emails: str = ""  # comma-separated; these accounts can use the admin queue
+    voice_tool_secret: str = ""  # shared secret ElevenLabs sends in X-Reloop-Voice-Key; empty = voice API off
+
+    @property
+    def voice_tools_ready(self) -> bool:
+        """The voice API stays off unless the shared secret is long enough to be hard to guess."""
+        return len(self.voice_tool_secret.strip()) >= 32
 
     @property
     def admin_email_set(self) -> set[str]:
@@ -64,6 +70,7 @@ class Settings(BaseSettings):
             "accounts": self.accounts_ready,
             "admins_configured": bool(self.admin_email_set),
             "anon_key_misconfigured": self.anon_key_is_secret,
+            "voice_tools": self.voice_tools_ready,
         }
 
 

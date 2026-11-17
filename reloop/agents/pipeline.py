@@ -47,6 +47,23 @@ class WastePipeline:
         draft = PipelineResult(scan=scan, knowledge=knowledge, options=options, donation=donation, steps=[s1, s2, s3, s4])
         return self._finish(draft)
 
+    def run_description(self, description: str, condition: Condition | None = None) -> PipelineResult:
+        """Same workflow from words instead of a photo (voice enquiries).
+
+        `condition` is what the caller said about the item's state. The guardrails still
+        decide whether it matters: hazardous and medical items stay blocked whatever is said.
+        Raises ClassifierUnavailable when the item can't be classified.
+        """
+        if self.classification.classifier is None:
+            raise ClassifierUnavailable("AI classification isn't switched on yet. Please check back soon.")
+        scan, s1 = self.classification.run_description(description)
+        knowledge, s2 = self.knowledge.run(scan)
+        scan, options, s3 = self.recommendation.run(scan, condition)
+        donation, s4 = self.donation.run(scan)
+        draft = PipelineResult(scan=scan, knowledge=knowledge, options=options, donation=donation,
+                               steps=[s1, s2, s3, s4], condition=condition)
+        return self._finish(draft)
+
     def rerun_with_condition(self, previous: PipelineResult, condition: Condition) -> PipelineResult:
         """Re-plan after the user confirms the item's condition. No new AI calls.
 

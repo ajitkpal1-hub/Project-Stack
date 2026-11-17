@@ -1,4 +1,4 @@
-"""Classification Agent: photo -> what the item is and which lane it goes in.
+"""Classification Agent: photo (or a spoken description) -> what the item is and which lane it goes in.
 
 Wraps the vision classifier (Claude or the labelled mock) and applies the Python
 guardrails straight away, so every later agent works from safe, normalised data.
@@ -23,10 +23,18 @@ class ClassificationAgent:
         """Raises ClassifierUnavailable: without a classification nothing else can run."""
         assert self.classifier is not None  # WastePipeline.run checks this first
         ai = self.classifier.classify(image, note=note, filename=filename)
+        return self._finish(ai, "the photo")
+
+    def run_description(self, description: str) -> tuple[ScanResult, AgentStep]:
+        """Words instead of a photo (voice enquiries). Raises ClassifierUnavailable."""
+        assert self.classifier is not None
+        return self._finish(self.classifier.describe(description), "your description")
+
+    def _finish(self, ai, source: str) -> tuple[ScanResult, AgentStep]:
         scan = apply_guardrails(ai, demo=self.classifier.is_demo)
         if not scan.item_detected:
-            summary = "No household item was visible, so we'll ask before advising."
+            summary = "No household item was identified, so we'll ask before advising."
         else:
-            source = "a sample answer (demo mode)" if scan.demo else "the photo"
+            source = "a sample answer (demo mode)" if scan.demo else source
             summary = f"Identified '{scan.identified_item}' in the {scan.primary_category.value} lane from {source}."
         return scan, AgentStep(agent=NAME, status=StepStatus.DONE, summary=summary)

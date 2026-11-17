@@ -26,6 +26,8 @@ Browser ──HTML form──▶ Vercel Function (app.py → reloop.web:app)
                          ├─ rag/           chunking, Voyage embeddings, pgvector store, cited answers
                          ├─ database/      thin Supabase REST client + repositories (and in-memory fakes)
                          └─ templates/     Jinja2 pages; partials/ for shared pieces
+ElevenLabs voice agent ──JSON + X-Reloop-Voice-Key──▶ routes/voice.py (/api/voice/ask, classify, centres)
+                         same agents, guardrails and Safety Review as the website; replies carry a `say` line to speak
 Vercel CDN ── public/ (CSS, fonts, favicon)
 Supabase  ── Postgres + pgvector + Auth + Storage, row-level security on every table
 ```

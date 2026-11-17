@@ -37,6 +37,8 @@ class Classifier(Protocol):
 
     def classify(self, image: PreparedImage, note: str | None = None, filename: str | None = None) -> AIClassification: ...
 
+    def describe(self, description: str) -> AIClassification: ...
+
 
 SYSTEM_PROMPT = """You identify household items and waste from a single photo for RELOOP AI, a service for households in India (pilot: Thakurli, Dombivli and Kalyan, Maharashtra).
 
@@ -60,6 +62,15 @@ Rules:
 7. If no household item is visible, set item_detected false, primary_category "unsure", certainty "unsure", recommended_action "ask_first".
 8. Plain, friendly English. No jargon."""
 
+# Added to the user message when there is no photo (voice enquiries).
+DESCRIPTION_PROMPT = """There is no photo. A household member has described the item in words, below.
+Classify it from the description only. Treat "visible" in the rules as "described": don't fill in details they didn't give.
+If the description is too vague to tell what the item is or what it is made of, use certainty "unsure" and ask clarifying_questions.
+Never assume the item works or is clean, even if they say it is "good" or "fine"; the app asks about condition separately.
+
+Description: """
+MAX_DESCRIPTION_CHARS = 300
+
 
 class ClaudeClassifier:
     is_demo = False
@@ -73,10 +84,26 @@ class ClaudeClassifier:
 
     def classify(self, image: PreparedImage, note: str | None = None, filename: str | None = None) -> AIClassification:
         # filename is deliberately not sent to the AI (it can contain personal details).
-        anthropic = self._anthropic
         text = "Identify this item and classify it."
         if note:
             text += f"\nThe user adds: {note[:300]}"
+        image_block = {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": image.media_type,
+                "data": base64.standard_b64encode(image.data).decode("ascii"),
+            },
+        }
+        return self._parse([image_block, {"type": "text", "text": text}], kind="photo")
+
+    def describe(self, description: str) -> AIClassification:
+        """Classify from words alone (voice enquiries). Same schema, same guardrails afterwards."""
+        text = DESCRIPTION_PROMPT + " ".join(description.split())[:MAX_DESCRIPTION_CHARS]
+        return self._parse([{"type": "text", "text": text}], kind="description")
+
+    def _parse(self, content: list[dict], kind: str) -> AIClassification:
+        anthropic = self._anthropic
         started = time.perf_counter()
         try:
             response = self._client.beta.messages.parse(
@@ -87,22 +114,7 @@ class ClaudeClassifier:
                 fallbacks="default",
                 output_config={"effort": "low"},  # simple classification: low effort is much faster
                 system=SYSTEM_PROMPT,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": image.media_type,
-                                    "data": base64.standard_b64encode(image.data).decode("ascii"),
-                                },
-                            },
-                            {"type": "text", "text": text},
-                        ],
-                    }
-                ],
+                messages=[{"role": "user", "content": content}],
                 output_format=AIClassification,
             )
         except anthropic.AuthenticationError:
@@ -113,7 +125,8 @@ class ClaudeClassifier:
             raise ClassifierUnavailable("The AI service is busy. Please try again in a minute.") from None
         except anthropic.BadRequestError as e:
             log.error("classifier bad request: %s", e.message)
-            raise ClassifierUnavailable("The AI service couldn't process that photo. Please try another one.") from None
+            what = "photo" if kind == "photo" else "description"
+            raise ClassifierUnavailable(f"The AI service couldn't process that {what}. Please try another one.") from None
         except anthropic.APIStatusError as e:
             log.error("classifier API error %s", e.status_code)
             raise ClassifierUnavailable("The AI service had a problem. Please try again shortly.") from None
@@ -123,12 +136,14 @@ class ClaudeClassifier:
 
         elapsed = time.perf_counter() - started
         log.info(
-            "classified model=%s stop=%s in=%s out=%s %.1fs request=%s",
-            response.model, response.stop_reason, response.usage.input_tokens,
+            "classified kind=%s model=%s stop=%s in=%s out=%s %.1fs request=%s",
+            kind, response.model, response.stop_reason, response.usage.input_tokens,
             response.usage.output_tokens, elapsed, getattr(response, "_request_id", None),
         )
         if response.stop_reason == "refusal":
-            raise ClassifierUnavailable("The AI service declined to analyse this photo. Please try a different photo of the item.")
+            if kind == "photo":
+                raise ClassifierUnavailable("The AI service declined to analyse this photo. Please try a different photo of the item.")
+            raise ClassifierUnavailable("The AI service declined to answer about this item. Please describe it differently.")
         if response.stop_reason == "max_tokens" or response.parsed_output is None:
             raise ClassifierUnavailable("The AI answer was incomplete. Please try again.")
         return response.parsed_output
@@ -145,7 +160,16 @@ class MockClassifier:
     def classify(self, image: PreparedImage, note: str | None = None, filename: str | None = None) -> AIClassification:
         if self._fail:
             raise ClassifierUnavailable("The AI service had a problem. Please try again shortly.")
-        hint = f"{filename or ''} {note or ''}".lower()
+        return self._lookup(f"{filename or ''} {note or ''}")
+
+    def describe(self, description: str) -> AIClassification:
+        if self._fail:
+            raise ClassifierUnavailable("The AI service had a problem. Please try again shortly.")
+        return self._lookup(description)
+
+    @staticmethod
+    def _lookup(hint: str) -> AIClassification:
+        hint = hint.lower()
         for keyword, factory in _MOCK_LIBRARY:
             if keyword in hint:
                 return factory()
