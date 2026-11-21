@@ -1,7 +1,7 @@
 {% from "partials/icons.html" import icon %}
 {# The chute: take a photo with the camera or upload one. With /js/scan.js the scan starts as soon
    as a photo is chosen and shows a "Scanning" state; without it, the Identify button submits. #}
-{% macro chute(button_label, show_donate=false, show_note=false, disabled=false) -%}
+{% macro chute(button_label, show_donate=false, show_note=false, disabled=false, show_talk=false) -%}
 <form class="chute" action="/scan" method="post" enctype="multipart/form-data" data-autosubmit data-loading="scan">
   {% if show_note %}
   <label class="chute-note">
@@ -30,6 +30,7 @@
   <div class="chute-actions">
     <button class="btn btn-primary chute-submit" type="submit" {% if disabled %}disabled{% endif %}>{{ button_label }} {{ icon('arrow', 18) }}</button>
     {% if show_donate %}<a class="btn btn-quiet" href="/donate">{{ icon('gift', 18) }} {{ _('Donate an item') }}</a>{% endif %}
+    {% if show_talk %}<a class="btn btn-quiet" href="/talk">{{ icon('mic', 18) }} {{ _('Talk to our voice helper') }}</a>{% endif %}
   </div>
 </form>
 {%- endmacro %}

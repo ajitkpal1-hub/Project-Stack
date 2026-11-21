@@ -367,3 +367,10 @@ def test_talk_page_off_without_valid_agent(monkeypatch, bad):
 def test_talk_in_navigation(client):
     assert 'href="/talk"' in client.get("/").text
     assert client.get("/api/health").json()["integrations"]["voice_widget"] is True
+
+
+def test_homepage_links_to_voice_helper(client):
+    html = client.get("/").text
+    assert 'href="/talk"' in html.split('class="chute"')[1].split("</form>")[0]  # in the hero, beside Donate
+    assert "Talk to our voice helper" in html
+    assert "<elevenlabs-convai" not in html  # the widget itself still loads only on /talk
