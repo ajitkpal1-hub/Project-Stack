@@ -148,7 +148,7 @@
           "mode": "list",
           "value": ""
         },
-        "text": "=:clapper: *New reel draft to review*: {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Topic'] }}\n*Status:* {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Status'] }}\n*Hook:* {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Hook'] }}\n{{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Review notes'] ? '*Review notes:*\n' + $('Ask RELOOP for a reel draft').item.json.sheet_row['Review notes'] : '' }}\nOpen the 'Reel drafts' sheet to check the facts against the sources, then film and post by hand.",
+        "text": "=:clapper: *New reel draft to review*: {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Topic'] }}\n*Status:* {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Status'] }}\n*Hook:* {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Hook'] }}\n*Review notes:* {{ $('Ask RELOOP for a reel draft').item.json.sheet_row['Review notes'] || 'none' }}\nOpen the 'RELOOP reel drafts' sheet, check each key fact against its source, then film and post by hand.",
         "otherOptions": {}
       }
     },

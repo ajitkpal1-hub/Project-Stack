@@ -96,3 +96,26 @@ def test_reel_workflow_is_scheduled_and_carries_no_secret():
     assert call["url"] == "https://reloop-india.vercel.app/api/internal/reel" and call["genericAuthType"] == "httpHeaderAuth"
     assert "X-Reloop-Internal-Key" not in json.dumps(call)  # the header and secret live in an n8n credential
     assert w["connections"]["Draft made?"]["main"][1][0]["node"] == "Report a problem"
+
+
+def _strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for v in value.values():
+            yield from _strings(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _strings(v)
+
+
+def test_n8n_expressions_have_no_backslashes():
+    # n8n's expression parser rejected a backslash escape inside {{ }} with "invalid syntax" (Slack message, 2026-11-21).
+    for name in ("reloop-voice-calls.json", "reloop-reel-drafts.json"):
+        w = json.loads((ROOT / "n8n" / name).read_text(encoding="utf-8"))
+        for n in w["nodes"]:
+            if n["type"] == "n8n-nodes-base.code":
+                continue  # plain JavaScript, not an expression
+            for text in _strings(n["parameters"]):
+                for expr in re.findall(r"\{\{(.*?)\}\}", text, flags=re.DOTALL):
+                    assert "\\" not in expr, (name, n["name"], expr[:80])

@@ -245,13 +245,14 @@ print(f"wrote {out.relative_to(ROOT)}")
 # ---------- Workflow 2: reel-script drafts on a schedule (internal, never public) ----------
 
 DRAFT = "$('Ask RELOOP for a reel draft').item.json"
-REEL_SLACK = (
-    "=:clapper: *New reel draft to review*: {{ " + DRAFT + ".sheet_row['Topic'] }}\n"
-    "*Status:* {{ " + DRAFT + ".sheet_row['Status'] }}\n"
-    "*Hook:* {{ " + DRAFT + ".sheet_row['Hook'] }}\n"
-    "{{ " + DRAFT + ".sheet_row['Review notes'] ? '*Review notes:*\n' + " + DRAFT + ".sheet_row['Review notes'] : '' }}\n"
-    "Open the 'Reel drafts' sheet to check the facts against the sources, then film and post by hand."
-)
+# Kept simple on purpose: n8n rejects backslash escapes inside {{ }} expressions ("invalid syntax").
+REEL_SLACK = "\n".join([
+    "=:clapper: *New reel draft to review*: {{ " + DRAFT + ".sheet_row['Topic'] }}",
+    "*Status:* {{ " + DRAFT + ".sheet_row['Status'] }}",
+    "*Hook:* {{ " + DRAFT + ".sheet_row['Hook'] }}",
+    "*Review notes:* {{ " + DRAFT + ".sheet_row['Review notes'] || 'none' }}",
+    "Open the 'RELOOP reel drafts' sheet, check each key fact against its source, then film and post by hand.",
+])
 
 reel_workflow = {
     "name": "RELOOP reel drafts (internal)",
