@@ -38,3 +38,31 @@ def test_contact_details_only_with_consent():
     assert "const callerName = consent === 'Yes'" in code
     assert "const callerPhone = consent === 'Yes'" in code
     assert "'Phone': callerPhone" in code and "'Contact consent': consent" in code
+
+
+def test_slack_never_carries_contact_details():
+    w = json.loads(WORKFLOW.read_text(encoding="utf-8"))
+    text = next(n for n in w["nodes"] if n["name"] == "Slack alert")["parameters"]["text"]
+    assert "['Phone']" not in text and "['Name']" not in text
+    assert "details are in HubSpot" in text
+
+
+def test_hubspot_only_after_consent():
+    w = json.loads(WORKFLOW.read_text(encoding="utf-8"))
+    conn = w["connections"]
+    assert conn["Callback agreed?"]["main"][0][0]["node"] == "HubSpot: find contact by phone"
+    assert conn["Callback agreed?"]["main"][1] == []  # no consent: nothing goes to HubSpot
+    gate = next(n for n in w["nodes"] if n["name"] == "Callback agreed?")["parameters"]["conditions"]["conditions"]
+    assert {c["rightValue"] for c in gate} >= {"Yes"} and any(c["operator"]["operation"] == "notEmpty" for c in gate)
+    hubspot = [n for n in w["nodes"] if n["name"].startswith("HubSpot")]
+    assert len(hubspot) == 4 and all(n["parameters"]["nodeCredentialType"] == "hubspotAppToken" for n in hubspot)
+    assert all(n["parameters"]["url"].lstrip("=").startswith("https://api.hubapi.com/") for n in hubspot)
+
+
+def test_paste_in_snippet_matches_workflow():
+    snippet = json.loads((ROOT / "n8n" / "add-slack-hubspot-nodes.json").read_text(encoding="utf-8"))
+    w = json.loads(WORKFLOW.read_text(encoding="utf-8"))
+    names = {n["name"] for n in snippet["nodes"]}
+    assert names == {"Slack alert", "Callback agreed?", "HubSpot: find contact by phone", "Already in HubSpot?",
+                     "HubSpot: update contact", "HubSpot: create contact", "HubSpot: add call note"}
+    assert all(n in w["nodes"] for n in snippet["nodes"])

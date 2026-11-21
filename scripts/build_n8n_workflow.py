@@ -24,6 +24,116 @@ Summary: {{ $json['Summary'] }}
 Conversation ID: {{ $json['Conversation ID'] }} (find the full call in ElevenLabs -> Agents -> Conversations).
 """
 
+ROW = "$('Check signature + build row').item.json"
+
+
+def field(name: str) -> str:
+    """A JS expression for one column of the row built by the Code node."""
+    return f"{ROW}['{name}']"
+
+
+# Slack is seen by the whole channel, so it never carries the caller's name or phone number.
+SLACK_MESSAGE = (
+    "=:recycle: *RELOOP voice call needs follow-up*\n"
+    f"*Item:* {{{{ {field('Item')} || 'not recorded' }}}} (lane: {{{{ {field('Lane')} || 'n/a' }}}})\n"
+    f"*Donation lead:* {{{{ {field('Donation lead')} }}}}   *Safety concern:* {{{{ {field('Safety concern')} }}}}\n"
+    f"*Locality or PIN:* {{{{ {field('Locality or PIN')} || 'not given' }}}}\n"
+    f"*Callback requested:* {{{{ {field('Contact consent')} === 'Yes' ? 'yes, contact details are in HubSpot' : 'no' }}}}\n"
+    f"*Unanswered question:* {{{{ {field('Unanswered question')} || 'none' }}}}\n"
+    f">{{{{ {field('Summary')} }}}}\n"
+    f"_Conversation {{{{ {field('Conversation ID')} }}}}_"
+)
+
+HUBSPOT = "https://api.hubapi.com/crm/v3/objects"
+IS_PIN = f"/^[1-9][0-9]{{5}}$/.test({field('Locality or PIN')})"
+CONTACT_PROPERTIES = (
+    f"{{ firstname: {field('Name')}, phone: {field('Phone')}, "
+    f"zip: {IS_PIN} ? {field('Locality or PIN')} : undefined, "
+    f"city: {IS_PIN} ? undefined : ({field('Locality or PIN')} || undefined) }}"
+)
+NOTE_BODY = (
+    f"'<b>RELOOP voice call</b> (' + {field('Call time (IST)')} + ')<br>' + "
+    f"'Item: ' + {field('Item')} + ' (lane: ' + {field('Lane')} + ')<br>' + "
+    f"'Donation lead: ' + {field('Donation lead')} + ', safety concern: ' + {field('Safety concern')} + '<br>' + "
+    f"'Locality or PIN: ' + {field('Locality or PIN')} + '<br>' + "
+    f"'Unanswered question: ' + ({field('Unanswered question')} || 'none') + '<br><br>' + "
+    f"{field('Summary')} + '<br><br>Conversation ' + {field('Conversation ID')}"
+)
+
+
+def if_node(node_id: str, name: str, position: list[int], conditions: list[dict]) -> dict:
+    return {
+        "id": node_id, "name": name, "type": "n8n-nodes-base.if", "typeVersion": 2, "position": position,
+        "parameters": {
+            "conditions": {
+                "options": {"caseSensitive": True, "leftValue": "", "typeValidation": "loose"},
+                "conditions": conditions,
+                "combinator": "and",
+            },
+            "options": {},
+        },
+    }
+
+
+def hubspot_request(node_id: str, name: str, position: list[int], method: str, url: str, body: str) -> dict:
+    """HubSpot API call using n8n's 'HubSpot App Token' credential (a HubSpot private app token)."""
+    return {
+        "id": node_id, "name": name, "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": position,
+        "parameters": {
+            "method": method, "url": url,
+            "authentication": "predefinedCredentialType", "nodeCredentialType": "hubspotAppToken",
+            "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify(" + body + ") }}",
+            "options": {},
+        },
+    }
+
+
+EXTRA_NODES = [
+    {
+        "id": "a1f0c6de-1111-4c4c-9a01-000000000006",
+        "name": "Slack alert",
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2.3,
+        "position": [1040, 100],
+        "parameters": {
+            "authentication": "oAuth2",
+            "select": "channel",
+            "channelId": {"__rl": True, "mode": "list", "value": ""},
+            "text": SLACK_MESSAGE,
+            "otherOptions": {},
+        },
+    },
+    if_node("a1f0c6de-1111-4c4c-9a01-000000000007", "Callback agreed?", [1040, 300], [
+        {"id": "c0b1", "leftValue": "={{ " + field("Contact consent") + " }}", "rightValue": "Yes",
+         "operator": {"type": "string", "operation": "equals"}},
+        {"id": "c0b2", "leftValue": "={{ " + field("Phone") + " }}", "rightValue": "",
+         "operator": {"type": "string", "operation": "notEmpty", "singleValue": True}},
+    ]),
+    hubspot_request("a1f0c6de-1111-4c4c-9a01-000000000008", "HubSpot: find contact by phone", [1300, 300], "POST",
+                    HUBSPOT + "/contacts/search",
+                    "{ filterGroups: [{ filters: [{ propertyName: 'phone', operator: 'EQ', value: " + field("Phone") + " }] }], "
+                    "properties: ['firstname', 'phone'], limit: 1 }"),
+    if_node("a1f0c6de-1111-4c4c-9a01-000000000009", "Already in HubSpot?", [1560, 300], [
+        {"id": "c0c1", "leftValue": "={{ $json.total }}", "rightValue": 0, "operator": {"type": "number", "operation": "gt"}},
+    ]),
+    hubspot_request("a1f0c6de-1111-4c4c-9a01-000000000010", "HubSpot: update contact", [1820, 200], "PATCH",
+                    "=" + HUBSPOT + "/contacts/{{ $json.results[0].id }}",
+                    "{ properties: " + CONTACT_PROPERTIES + " }"),
+    hubspot_request("a1f0c6de-1111-4c4c-9a01-000000000011", "HubSpot: create contact", [1820, 400], "POST",
+                    HUBSPOT + "/contacts",
+                    "{ properties: Object.assign(" + CONTACT_PROPERTIES + ", { lifecyclestage: 'lead' }) }"),
+    hubspot_request("a1f0c6de-1111-4c4c-9a01-000000000012", "HubSpot: add call note", [2080, 300], "POST",
+                    HUBSPOT + "/notes",
+                    "{ properties: { hs_timestamp: new Date().toISOString(), hs_note_body: " + NOTE_BODY + " }, "
+                    "associations: [{ to: { id: $json.id }, "
+                    "types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 202 }] }] }"),  # 202 = note to contact
+]
+
+
+def link(target: str) -> dict:
+    return {"node": target, "type": "main", "index": 0}
+
+
 workflow = {
     "name": "RELOOP voice calls to Google Sheet",
     "nodes": [
@@ -97,12 +207,18 @@ workflow = {
                 "options": {"appendAttribution": False},
             },
         },
+        *EXTRA_NODES,
     ],
     "connections": {
         "ElevenLabs post-call webhook": {"main": [[{"node": "Check signature + build row", "type": "main", "index": 0}]]},
         "Check signature + build row": {"main": [[{"node": "Add row to Google Sheet", "type": "main", "index": 0}]]},
         "Add row to Google Sheet": {"main": [[{"node": "Needs follow-up?", "type": "main", "index": 0}]]},
-        "Needs follow-up?": {"main": [[{"node": "Email the team", "type": "main", "index": 0}], []]},
+        "Needs follow-up?": {"main": [[link("Email the team"), link("Slack alert"), link("Callback agreed?")], []]},
+        "Callback agreed?": {"main": [[link("HubSpot: find contact by phone")], []]},
+        "HubSpot: find contact by phone": {"main": [[link("Already in HubSpot?")]]},
+        "Already in HubSpot?": {"main": [[link("HubSpot: update contact")], [link("HubSpot: create contact")]]},
+        "HubSpot: update contact": {"main": [[link("HubSpot: add call note")]]},
+        "HubSpot: create contact": {"main": [[link("HubSpot: add call note")]]},
     },
     "settings": {"executionOrder": "v1"},
     "pinData": {},
@@ -110,4 +226,14 @@ workflow = {
 
 out = ROOT / "n8n" / "reloop-voice-calls.json"
 out.write_text(json.dumps(workflow, indent=2) + "\n", encoding="utf-8")
+print(f"wrote {out.relative_to(ROOT)}")
+
+# Just the Slack + HubSpot boxes, for pasting onto an existing workflow's canvas (keeps its secret and logins).
+extra_names = {n["name"] for n in EXTRA_NODES}
+snippet = {
+    "nodes": EXTRA_NODES,
+    "connections": {k: v for k, v in workflow["connections"].items() if k in extra_names},
+}
+out = ROOT / "n8n" / "add-slack-hubspot-nodes.json"
+out.write_text(json.dumps(snippet, indent=2) + "\n", encoding="utf-8")
 print(f"wrote {out.relative_to(ROOT)}")

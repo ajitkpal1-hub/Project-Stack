@@ -64,6 +64,29 @@ Make a short call on `/talk` ("I have an old wooden chair", then "it works and i
 - A new row should appear in the sheet, with Donation lead = Yes, and the team gets an email.
 - n8n → **Executions** shows each run. A red run that says **Rejected** means the secret in the Code node doesn't match ElevenLabs.
 
+## 6. Slack and HubSpot (optional)
+When a call needs follow-up, n8n also posts to a Slack channel. When the caller agreed to a callback, it finds or
+creates their HubSpot contact (matched on phone number) and adds a note with the call summary.
+- **Slack never gets the name or phone number** (channels are widely visible). It says "contact details are in HubSpot".
+- **HubSpot only gets callers who agreed** to be contacted. Others never reach it.
+
+Add to an existing workflow (keeps its secret and logins): open `n8n/add-slack-hubspot-nodes.json`, copy everything,
+click on the n8n canvas and paste (Ctrl+V). Then drag two lines from the **true** output of **Needs follow-up?**: one to
+**Slack alert**, one to **Callback agreed?**. (A fresh import of `n8n/reloop-voice-calls.json` already has them joined.)
+
+**Slack:** open **Slack alert** → Credential → create new → sign in with Slack and allow → pick the channel
+(e.g. `#reloop-follow-ups`). Invite the n8n app to that channel if Slack asks.
+
+**HubSpot:** create a private app token:
+1. HubSpot → Settings (gear) → Integrations → **Private Apps** → **Create a private app**, name it `RELOOP n8n`.
+2. Scopes: `crm.objects.contacts.read` and `crm.objects.contacts.write`.
+3. Create, then copy the **access token**. Paste it only into n8n.
+4. In n8n, open each of the four **HubSpot:** boxes → Credential → create new **HubSpot App Token** → paste the token
+   (create it once, then choose the same credential in the other three boxes).
+
+Test with a call where the caller agrees to a callback: a Slack message arrives, and the contact (with a note) appears in
+HubSpot → Contacts. If a HubSpot box turns red, its error names the missing scope or the problem.
+
 ## Notes
 - ElevenLabs needs a 200 reply; the webhook answers straight away, so slow Google calls don't cause retries.
 - If retries are switched on in ElevenLabs, the same call updates its row instead of adding a duplicate (matched on Conversation ID).

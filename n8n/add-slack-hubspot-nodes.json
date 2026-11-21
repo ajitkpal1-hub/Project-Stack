@@ -1,0 +1,244 @@
+{
+  "nodes": [
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000006",
+      "name": "Slack alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        100
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "text": "=:recycle: *RELOOP voice call needs follow-up*\n*Item:* {{ $('Check signature + build row').item.json['Item'] || 'not recorded' }} (lane: {{ $('Check signature + build row').item.json['Lane'] || 'n/a' }})\n*Donation lead:* {{ $('Check signature + build row').item.json['Donation lead'] }}   *Safety concern:* {{ $('Check signature + build row').item.json['Safety concern'] }}\n*Locality or PIN:* {{ $('Check signature + build row').item.json['Locality or PIN'] || 'not given' }}\n*Callback requested:* {{ $('Check signature + build row').item.json['Contact consent'] === 'Yes' ? 'yes, contact details are in HubSpot' : 'no' }}\n*Unanswered question:* {{ $('Check signature + build row').item.json['Unanswered question'] || 'none' }}\n>{{ $('Check signature + build row').item.json['Summary'] }}\n_Conversation {{ $('Check signature + build row').item.json['Conversation ID'] }}_",
+        "otherOptions": {}
+      }
+    },
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000007",
+      "name": "Callback agreed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c0b1",
+              "leftValue": "={{ $('Check signature + build row').item.json['Contact consent'] }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c0b2",
+              "leftValue": "={{ $('Check signature + build row').item.json['Phone'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000008",
+      "name": "HubSpot: find contact by phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterGroups: [{ filters: [{ propertyName: 'phone', operator: 'EQ', value: $('Check signature + build row').item.json['Phone'] }] }], properties: ['firstname', 'phone'], limit: 1 }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000009",
+      "name": "Already in HubSpot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c0c1",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000010",
+      "name": "HubSpot: update contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        200
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.results[0].id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { firstname: $('Check signature + build row').item.json['Name'], phone: $('Check signature + build row').item.json['Phone'], zip: /^[1-9][0-9]{5}$/.test($('Check signature + build row').item.json['Locality or PIN']) ? $('Check signature + build row').item.json['Locality or PIN'] : undefined, city: /^[1-9][0-9]{5}$/.test($('Check signature + build row').item.json['Locality or PIN']) ? undefined : ($('Check signature + build row').item.json['Locality or PIN'] || undefined) } }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000011",
+      "name": "HubSpot: create contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: Object.assign({ firstname: $('Check signature + build row').item.json['Name'], phone: $('Check signature + build row').item.json['Phone'], zip: /^[1-9][0-9]{5}$/.test($('Check signature + build row').item.json['Locality or PIN']) ? $('Check signature + build row').item.json['Locality or PIN'] : undefined, city: /^[1-9][0-9]{5}$/.test($('Check signature + build row').item.json['Locality or PIN']) ? undefined : ($('Check signature + build row').item.json['Locality or PIN'] || undefined) }, { lifecyclestage: 'lead' }) }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c6de-1111-4c4c-9a01-000000000012",
+      "name": "HubSpot: add call note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2080,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { hs_timestamp: new Date().toISOString(), hs_note_body: '<b>RELOOP voice call</b> (' + $('Check signature + build row').item.json['Call time (IST)'] + ')<br>' + 'Item: ' + $('Check signature + build row').item.json['Item'] + ' (lane: ' + $('Check signature + build row').item.json['Lane'] + ')<br>' + 'Donation lead: ' + $('Check signature + build row').item.json['Donation lead'] + ', safety concern: ' + $('Check signature + build row').item.json['Safety concern'] + '<br>' + 'Locality or PIN: ' + $('Check signature + build row').item.json['Locality or PIN'] + '<br>' + 'Unanswered question: ' + ($('Check signature + build row').item.json['Unanswered question'] || 'none') + '<br><br>' + $('Check signature + build row').item.json['Summary'] + '<br><br>Conversation ' + $('Check signature + build row').item.json['Conversation ID'] }, associations: [{ to: { id: $json.id }, types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 202 }] }] }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Callback agreed?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: find contact by phone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "HubSpot: find contact by phone": {
+      "main": [
+        [
+          {
+            "node": "Already in HubSpot?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already in HubSpot?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: update contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HubSpot: create contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: update contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: add call note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: create contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: add call note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
