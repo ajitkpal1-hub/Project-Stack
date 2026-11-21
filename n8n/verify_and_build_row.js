@@ -128,5 +128,10 @@ return [{
     'Name': callerName,
     'Phone': callerPhone,
     'Contact consent': consent,
+    // Diagnostic: how ElevenLabs labelled each collected item (labels and value types only, never values).
+    // Handy if columns ever come through empty again. Needs a 'Debug' column in the sheet (or n8n ignores it).
+    'Debug': 'v3 | ' + (Array.isArray(collected) ? 'list' : typeof collected) + ' | ' + entries.map((e) =>
+      e.labels.join('/') + ':' + (e.v && typeof e.v === 'object' ? 'obj{' + Object.keys(e.v).join(',') + '}' : typeof e.v)
+      + (e.description ? '~' + e.description.slice(0, 25) : '')).join(' ; ').slice(0, 1500),
   },
 }];
