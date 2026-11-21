@@ -139,6 +139,17 @@ Use the agent's **Test** / call button and try these:
 | "What's the weather today?" | Politely declines. |
 | A tool with the wrong secret | RELOOP refuses (401) and the agent apologises and suggests the website. |
 
-## 6. Next
-- **Website widget:** a "Talk to us" page on RELOOP with the ElevenLabs widget. It needs the agent ID and a small security-policy change for that page only.
+## 6. The website page (/talk)
+The widget appears only on `/talk` ("Talk" in the menu). How it is set up:
+- **Agent ID:** `ELEVENLABS_AGENT_ID` in `reloop/config.py` (public, not a secret). Set the env var to override it, or set it to empty to switch the widget off.
+- **Pinned widget:** `@elevenlabs/convai-widget-embed` version `0.24.1` from unpkg, checked with a Subresource Integrity hash (`VOICE_WIDGET_*` in `reloop/security.py`).
+  To upgrade, download the new `dist/index.js`, read the changelog, recompute the sha384 hash, update both values, and test a call on `/talk`.
+- **Security policy:** only `/talk` gets the wider policy (the widget file, ElevenLabs `api`/`api.us`/`livekit` hosts, `blob:` worklets, inline styles, microphone).
+  Every other page keeps the strict policy with no microphone. The widget's fingerprinting telemetry ping and its Google Fonts import stay blocked.
+- **Allowlist:** the agent's Security → Allowlist must include the site's domain, or the widget can't connect.
+- **Privacy:** the widget includes FingerprintJS (device details used by ElevenLabs to prevent misuse). The page says so, next to the voice-processing notice.
+
+Checked 2026-11-21 in Edge: the widget loads with no blocked requests, and a call connects (`wss://api.us.elevenlabs.io/v1/convai/conversation`) and the agent speaks.
+
+## 7. Next
 - **n8n (Phase C):** a post-call webhook that saves each call's summary and alerts the team about donation leads and safety questions.

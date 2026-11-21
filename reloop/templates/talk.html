@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% set page = pages_by_slug['talk'] %}
+{% block title %}{{ _(page.title) }} | RELOOP AI{% endblock %}
+{% block description %}{{ _(page.purpose) }}{% endblock %}
+
+{% block main %}
+<section class="page-head">
+  <div class="wrap page-head-row">
+    <div class="page-bin lane--reuse" aria-hidden="true"><span>TALK</span></div>
+    <div>
+      <h1 class="display-1">{{ _(page.title) }}</h1>
+      <p class="page-purpose">{{ _(page.purpose) }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="wrap ask-layout">
+    <div class="ask-main">
+      {% if agent_id %}
+      <p class="notice" role="status">{{ icon('arrow', 18) }}
+        {{ _('Press the voice button at the bottom right of this page and allow your microphone. Then tell the helper what you want to get rid of.') }}</p>
+
+      <h2 class="display-3">{{ _('Things you can ask') }}</h2>
+      <ul class="checklist">
+        <li>{{ icon('check', 18) }}<span>{{ _('"I have an old wooden chair. What should I do with it?"') }}</span></li>
+        <li>{{ icon('check', 18) }}<span>{{ _('"How do I get rid of expired medicines?"') }}</span></li>
+        <li>{{ icon('check', 18) }}<span>{{ _('"Where can I drop off e-waste near 421201?"') }}</span></li>
+      </ul>
+
+      <noscript><p class="notice notice--error">{{ icon('alert', 18) }} {{ _('The voice helper needs JavaScript. You can still use the scanner, the assistant and the centre search without it.') }}</p></noscript>
+
+      <elevenlabs-convai agent-id="{{ agent_id }}"></elevenlabs-convai>
+      <script src="{{ widget_src }}" integrity="{{ widget_sri }}" crossorigin="anonymous" type="module" async></script>
+      {% else %}
+      <p class="notice notice--kb">{{ icon('clock', 18) }} {{ _("The voice helper isn't switched on right now. You can type your question in the assistant instead.") }}</p>
+      {% endif %}
+
+      <p class="fineprint">{{ _('Prefer typing?') }} <a href="/assistant">{{ _('Ask the assistant') }}</a> · <a href="/scan">{{ _('Scan a photo') }}</a></p>
+    </div>
+
+    <aside class="panel panel--soon ask-side">
+      <h2 class="display-3">{{ _('Before you talk') }}</h2>
+      <ul class="checklist">
+        <li>{{ icon('check', 18) }}<span>{{ _('Answers come from RELOOP: our official documents, our safety rules and our verified directory. The helper doesn\'t make up places or rules.') }}</span></li>
+        <li>{{ icon('check', 18) }}<span>{{ _('It asks whether an item works and is clean before saying it can be donated. Medicines and hazardous items are never donated.') }}</span></li>
+        <li>{{ icon('alert', 18) }}<span>{{ _('Voice is handled by our partner ElevenLabs. Your voice and the conversation are processed by them, and they collect technical details about your device to prevent misuse.') }}</span></li>
+        <li>{{ icon('alert', 18) }}<span>{{ _("Don't share your name, phone number or address. A locality or PIN code is enough.") }}</span></li>
+        <li>{{ icon('alert', 18) }}<span>{{ _('In an emergency, such as a fire, a chemical spill or swallowed medicine, call 112.') }}</span></li>
+      </ul>
+    </aside>
+  </div>
+</section>
+{% endblock %}

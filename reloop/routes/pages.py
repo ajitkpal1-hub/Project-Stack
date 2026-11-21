@@ -78,6 +78,12 @@ PAGES: list[Page] = [
         ],
     ),
     Page(
+        "talk", "/talk", "Talk", "Talk to our voice helper",
+        "Ask out loud which bin something goes in, whether it can be donated, and where to drop it.",
+        10, "reuse",
+        [],
+    ),
+    Page(
         "dashboard", "/dashboard", "My dashboard", "My dashboard",
         "Your listings, requests, scans and saved guidance in one place.",
         8, "unsure",
@@ -116,7 +122,7 @@ def _feature(request: Request, page: Page, **extra) -> HTMLResponse:
     )
 
 
-SELF_RENDERED = {"scan", "assistant", "donate", "donations", "centres", "dashboard", "admin"}  # pages with their own route module
+SELF_RENDERED = {"scan", "assistant", "donate", "donations", "centres", "talk", "dashboard", "admin"}  # pages with their own route module
 
 
 def _register(page: Page) -> None:

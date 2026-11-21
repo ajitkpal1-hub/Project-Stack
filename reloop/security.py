@@ -122,27 +122,50 @@ def _photo_origin() -> str:
     return url if url.startswith("https://") else ""
 
 
-def security_headers(secure: bool) -> dict[str, str]:
+# The ElevenLabs voice widget, used on /talk only. Pinned to one reviewed version and checked
+# with Subresource Integrity, so an unreviewed update can't run on the site.
+VOICE_WIDGET_VERSION = "0.24.1"
+VOICE_WIDGET_SRC = f"https://unpkg.com/@elevenlabs/convai-widget-embed@{VOICE_WIDGET_VERSION}/dist/index.js"
+VOICE_WIDGET_SRI = "sha384-B4uAhBswsi7DItpkOMjD0LFyy8AxRDYQTIzwJV1rKWZ1a1zI1Fd/4VE5vy6Ua43S"
+_VOICE_WIDGET_POLICY = {
+    # the widget, its audio resampler worklet, and worklets it builds in memory
+    "script-src": f"'self' {VOICE_WIDGET_SRC} https://cdn.jsdelivr.net/npm/@alexanderolsen/libsamplerate-js@2.1.2/ blob:",
+    "worker-src": "blob:",
+    # ElevenLabs API and its LiveKit voice connection. Nothing else (fingerprinting telemetry and Google Fonts stay blocked).
+    "connect-src": ("https://api.elevenlabs.io wss://api.elevenlabs.io https://api.us.elevenlabs.io wss://api.us.elevenlabs.io "
+                    "https://livekit.rtc.elevenlabs.io wss://livekit.rtc.elevenlabs.io"),
+    "style-src": "'self' 'unsafe-inline'",  # the widget styles its own shadow DOM
+    "media-src": "'self' blob: mediastream:",
+    "img-src": "'self' data: https://storage.googleapis.com/eleven-public-cdn/",
+}
+
+
+def security_headers(secure: bool, voice_widget: bool = False) -> dict[str, str]:
     """The only script is our own /js/scan.js (no inline scripts, no inline styles), so the
-    policy stays strict. Listing photos come from Supabase Storage through short-lived signed links."""
-    csp = "; ".join([
-        "default-src 'self'",
-        "script-src 'self'",
-        "connect-src 'none'",
-        "style-src 'self'",
-        "font-src 'self'",
-        f"img-src 'self' data: {_photo_origin()}".strip(),
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-        "base-uri 'none'",
-        "object-src 'none'",
-    ] + (["upgrade-insecure-requests"] if secure else []))
+    policy stays strict. Listing photos come from Supabase Storage through short-lived signed links.
+    `voice_widget` widens it just enough for the ElevenLabs widget, on the /talk page only."""
+    policy = {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "connect-src": "'none'",
+        "style-src": "'self'",
+        "font-src": "'self'",
+        "img-src": f"'self' data: {_photo_origin()}".strip(),
+        "form-action": "'self'",
+        "frame-ancestors": "'none'",
+        "base-uri": "'none'",
+        "object-src": "'none'",
+    }
+    if voice_widget:
+        policy.update(_VOICE_WIDGET_POLICY)
+    csp = "; ".join([f"{name} {value}" for name, value in policy.items()]
+                    + (["upgrade-insecure-requests"] if secure else []))
     headers = {
         "Content-Security-Policy": csp,
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "Permissions-Policy": f"camera=(), microphone={'(self)' if voice_widget else '()'}, geolocation=(), payment=()",
         "Cross-Origin-Opener-Policy": "same-origin",
     }
     if secure:

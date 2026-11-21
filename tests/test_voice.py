@@ -317,3 +317,53 @@ def test_pipeline_run_description_applies_safety_review():
 def test_pipeline_run_description_without_classifier():
     with pytest.raises(ClassifierUnavailable):
         WastePipeline(None).run_description("chair")
+
+
+# ---------- /talk page (ElevenLabs widget) ----------
+
+AGENT = "agent_1101m7n723ahf1q9e8mht5s1cmww"
+
+
+def test_talk_page_loads_pinned_widget_with_integrity(client):
+    r = client.get("/talk")
+    assert r.status_code == 200
+    assert f'agent-id="{AGENT}"' in r.text
+    assert 'src="https://unpkg.com/@elevenlabs/convai-widget-embed@0.24.1/dist/index.js"' in r.text
+    assert 'integrity="sha384-' in r.text and 'crossorigin="anonymous"' in r.text
+    assert "ElevenLabs" in r.text and "112" in r.text  # privacy and emergency notes
+
+
+def test_talk_page_widens_policy_only_as_needed(client):
+    h = client.get("/talk").headers
+    csp = h["content-security-policy"]
+    assert "https://unpkg.com/@elevenlabs/convai-widget-embed@0.24.1/dist/index.js" in csp
+    assert "wss://api.us.elevenlabs.io" in csp
+    assert "unpkg.com/ " not in csp and "https://unpkg.com;" not in csp  # the exact file, never all of unpkg
+    assert "openfpcdn" not in csp and "fonts.googleapis" not in csp  # telemetry and Google Fonts stay blocked
+    assert "frame-ancestors 'none'" in csp and "object-src 'none'" in csp
+    assert "microphone=(self)" in h["permissions-policy"]
+
+
+@pytest.mark.parametrize("path", ["/", "/scan", "/assistant", "/centres"])
+def test_other_pages_keep_strict_policy(client, path):
+    h = client.get(path).headers
+    assert "script-src 'self';" in h["content-security-policy"]
+    assert "connect-src 'none'" in h["content-security-policy"]
+    assert "microphone=()" in h["permissions-policy"]
+    assert "elevenlabs" not in client.get(path).text.split("<footer")[0].lower()
+
+
+@pytest.mark.parametrize("bad", ["", "agent_x", 'agent_abc123abc123abc123" onload="alert(1)', "AGENT_ABCDEFGHIJKLMNOPQRST"])
+def test_talk_page_off_without_valid_agent(monkeypatch, bad):
+    monkeypatch.setenv("ELEVENLABS_AGENT_ID", bad)
+    get_settings.cache_clear()
+    r = TestClient(create_app()).get("/talk")
+    assert r.status_code == 200
+    assert "isn&#39;t switched on" in r.text or "isn't switched on" in r.text
+    assert "<elevenlabs-convai" not in r.text and "unpkg" not in r.text
+    assert "microphone=()" in r.headers["permissions-policy"]
+
+
+def test_talk_in_navigation(client):
+    assert 'href="/talk"' in client.get("/").text
+    assert client.get("/api/health").json()["integrations"]["voice_widget"] is True
