@@ -52,11 +52,38 @@ const meta = data.metadata || {};
 const analysis = data.analysis || {};
 const collected = analysis.data_collection_results || {};
 
-// Data collection results may arrive as a plain value or as { value: ... }.
+// Data collection results can be keyed by the item's name ("item") or by an internal ID (items made in the
+// ElevenLabs analysis library), and can arrive as an object or a list. Find each item by its name, any ID
+// field, or the start of the description we gave it in docs/N8N.md.
+const DESCRIPTION_STARTS = {
+  item: 'the main item the caller asked about',
+  waste_lane: "the lane from reloop's classify_item",
+  donation_lead: 'true only if the classify_item result',
+  safety_concern: 'true if the caller asked about hazardous',
+  locality: 'the locality or 6-digit pin code',
+  unanswered_question: "a question the helper couldn't answer",
+  contact_consent: 'true only if the caller clearly agreed',
+  caller_name: "the caller's first name",
+  caller_phone: "the caller's phone number",
+  customer_name: 'the full name of the customer',
+};
+const entries = (Array.isArray(collected) ? collected.map((e, i) => [String(i), e]) : Object.entries(collected))
+  .map(([k, v]) => {
+    const labels = [k];
+    if (v && typeof v === 'object') {
+      for (const f of ['data_collection_id', 'name', 'id', 'key', 'identifier']) if (typeof v[f] === 'string') labels.push(v[f]);
+    }
+    const schema = (v && typeof v === 'object' && v.json_schema) || {};
+    return { labels: labels.map((s) => s.toLowerCase()), description: String(schema.description || '').toLowerCase(), v };
+  });
 const pick = (key) => {
-  const v = collected[key];
-  if (v === null || v === undefined) return '';
-  if (typeof v === 'object') return v.value ?? '';
+  const start = DESCRIPTION_STARTS[key];
+  const hit = entries.find((e) => e.labels.includes(key))
+    || (start && entries.find((e) => e.description.startsWith(start)));
+  if (!hit) return '';
+  let v = hit.v;
+  if (v && typeof v === 'object') v = v.value ?? v.result ?? '';
+  if (v === null || v === undefined || String(v).toLowerCase() === 'null') return '';
   return v;
 };
 const yes = (key) => {
