@@ -79,3 +79,8 @@ def test_sheet_stores_phone_as_text():
     w = json.loads(WORKFLOW.read_text(encoding="utf-8"))
     sheet = next(n for n in w["nodes"] if n["type"] == "n8n-nodes-base.googleSheets")
     assert sheet["parameters"]["options"]["cellFormat"] == "RAW"  # "+91 ..." would otherwise become a formula error
+
+
+def test_phone_never_starts_with_plus():
+    code = SCRIPT.read_text(encoding="utf-8")
+    assert "'91 ' + local" in code and "'+91 '" not in code

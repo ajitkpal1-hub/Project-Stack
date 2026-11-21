@@ -96,7 +96,8 @@ const consent = yes('contact_consent');
 const cleanPhone = (v) => {
   const digits = String(v || '').replace(/[^\d+]/g, '');
   const local = digits.replace(/^(\+?91)/, '');
-  return /^[6-9]\d{9}$/.test(local) ? '+91 ' + local : (digits.length >= 8 ? digits : '');
+  // No leading "+": Google Sheets reads "+91 ..." as a formula and shows #ERROR!.
+  return /^[6-9]\d{9}$/.test(local) ? '91 ' + local : (digits.length >= 8 ? digits.replace(/^\+/, '') : '');
 };
 const callerName = consent === 'Yes' ? String(pick('caller_name') || pick('customer_name') || '').slice(0, 60) : '';
 const callerPhone = consent === 'Yes' ? cleanPhone(pick('caller_phone')) : '';
