@@ -38,6 +38,7 @@ POLICIES: dict[str, tuple[list[Limit], int | None]] = {
     # Voice tool calls all arrive from ElevenLabs' servers, so the per-visitor limit is
     # effectively a cap on the whole voice channel. Each call may be a paid AI request.
     "voice": ([Limit(300, 3600)], 1500),
+    "internal": ([Limit(20, 3600)], 100),  # reel drafts: each one is a paid AI call
 }
 
 MESSAGES = {
@@ -46,6 +47,7 @@ MESSAGES = {
     "report": "Thanks, we've received several reports from you already. Please try again later.",
     "auth": "Too many sign-in attempts. Please wait 15 minutes and try again.",
     "voice": "The voice helper is very busy right now. Please try again later or use the website.",
+    "internal": "Too many internal requests in a short time. Try again in an hour.",
 }
 SITE_CAP_MESSAGE = "RELOOP is very busy today and has paused new AI requests. Please try again tomorrow."
 

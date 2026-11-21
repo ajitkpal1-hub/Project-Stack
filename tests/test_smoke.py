@@ -76,7 +76,7 @@ def test_health_reports_ok(client):
     assert data["status"] == "ok"
     assert data["python"].startswith("3.12")
     assert set(data["integrations"]) == {"supabase", "llm", "embeddings", "accounts", "admins_configured", "anon_key_misconfigured",
-                                      "voice_tools", "voice_widget"}
+                                      "voice_tools", "voice_widget", "internal_api"}
 
 
 def test_health_never_exposes_secret_values(monkeypatch):

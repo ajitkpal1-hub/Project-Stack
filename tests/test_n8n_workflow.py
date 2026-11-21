@@ -84,3 +84,15 @@ def test_sheet_stores_phone_as_text():
 def test_phone_never_starts_with_plus():
     code = SCRIPT.read_text(encoding="utf-8")
     assert "'91 ' + local" in code and "'+91 '" not in code
+
+
+def test_reel_workflow_is_scheduled_and_carries_no_secret():
+    path = ROOT / "n8n" / "reloop-reel-drafts.json"
+    w = json.loads(path.read_text(encoding="utf-8"))
+    trigger = next(n for n in w["nodes"] if n["type"] == "n8n-nodes-base.scheduleTrigger")
+    assert trigger["parameters"]["rule"]["interval"][0]["triggerAtDay"] == [1, 4]  # Monday and Thursday
+    assert w["settings"]["timezone"] == "Asia/Kolkata"
+    call = next(n for n in w["nodes"] if n["name"] == "Ask RELOOP for a reel draft")["parameters"]
+    assert call["url"] == "https://reloop-india.vercel.app/api/internal/reel" and call["genericAuthType"] == "httpHeaderAuth"
+    assert "X-Reloop-Internal-Key" not in json.dumps(call)  # the header and secret live in an n8n credential
+    assert w["connections"]["Draft made?"]["main"][1][0]["node"] == "Report a problem"

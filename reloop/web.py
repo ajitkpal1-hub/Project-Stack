@@ -12,7 +12,7 @@ from reloop import __version__
 from reloop.config import get_settings
 from reloop.models.categories import LANES
 from reloop.models.dashboards import FLAG_REASON_LABELS
-from reloop.routes import account, assistant, centres, dashboards, donations, pages, scan, talk, voice
+from reloop.routes import account, assistant, centres, dashboards, donations, internal, pages, scan, talk, voice
 from reloop.routes.deps import LoginRequired, login_url, viewer
 from reloop.security import SessionMiddleware, csrf_field, take_flash
 from reloop.templating import templates
@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(assistant.router)
     app.include_router(voice.router)
     app.include_router(talk.router)
+    app.include_router(internal.router)
 
     @app.exception_handler(LoginRequired)
     async def _login_required(request: Request, exc: LoginRequired) -> RedirectResponse:

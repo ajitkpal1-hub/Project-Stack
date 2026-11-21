@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     osm_user_agent: str = ""  # identifies the app to OpenStreetMap; generic default, no personal details
     admin_emails: str = ""  # comma-separated; these accounts can use the admin queue
     voice_tool_secret: str = ""  # shared secret ElevenLabs sends in X-Reloop-Voice-Key; empty = voice API off
+    internal_api_secret: str = ""  # X-Reloop-Internal-Key for /api/internal/* (n8n jobs); empty = off
+
+    @property
+    def internal_api_ready(self) -> bool:
+        return len(self.internal_api_secret.strip()) >= 32
+
     # Public ID of the ElevenLabs agent shown on /talk (not a secret). Empty switches the page's widget off.
     elevenlabs_agent_id: str = "agent_1101m7n723ahf1q9e8mht5s1cmww"
 
@@ -81,6 +87,7 @@ class Settings(BaseSettings):
             "anon_key_misconfigured": self.anon_key_is_secret,
             "voice_tools": self.voice_tools_ready,
             "voice_widget": bool(self.voice_widget_agent),
+            "internal_api": self.internal_api_ready,
         }
 
 

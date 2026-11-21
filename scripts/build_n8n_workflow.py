@@ -241,3 +241,105 @@ snippet = {
 out = ROOT / "n8n" / "add-slack-hubspot-nodes.json"
 out.write_text(json.dumps(snippet, indent=2) + "\n", encoding="utf-8")
 print(f"wrote {out.relative_to(ROOT)}")
+
+# ---------- Workflow 2: reel-script drafts on a schedule (internal, never public) ----------
+
+DRAFT = "$('Ask RELOOP for a reel draft').item.json"
+REEL_SLACK = (
+    "=:clapper: *New reel draft to review*: {{ " + DRAFT + ".sheet_row['Topic'] }}\n"
+    "*Status:* {{ " + DRAFT + ".sheet_row['Status'] }}\n"
+    "*Hook:* {{ " + DRAFT + ".sheet_row['Hook'] }}\n"
+    "{{ " + DRAFT + ".sheet_row['Review notes'] ? '*Review notes:*\n' + " + DRAFT + ".sheet_row['Review notes'] : '' }}\n"
+    "Open the 'Reel drafts' sheet to check the facts against the sources, then film and post by hand."
+)
+
+reel_workflow = {
+    "name": "RELOOP reel drafts (internal)",
+    "nodes": [
+        {
+            "id": "b2e1d7aa-2222-4c4c-9a01-000000000001",
+            "name": "Mon and Thu 9am",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [0, 0],
+            "parameters": {"rule": {"interval": [{"field": "weeks", "triggerAtDay": [1, 4], "triggerAtHour": 9}]}},
+        },
+        {
+            "id": "b2e1d7aa-2222-4c4c-9a01-000000000002",
+            "name": "Ask RELOOP for a reel draft",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [260, 0],
+            "parameters": {
+                "method": "POST",
+                "url": "https://reloop-india.vercel.app/api/internal/reel",
+                # Header Auth credential: name X-Reloop-Internal-Key, value = INTERNAL_API_SECRET (pasted in n8n only).
+                "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+                "sendBody": True, "specifyBody": "json", "jsonBody": "{}",
+                "options": {"timeout": 120000, "response": {"response": {"neverError": True}}},
+            },
+        },
+        if_node("b2e1d7aa-2222-4c4c-9a01-000000000003", "Draft made?", [520, 0], [
+            {"id": "d0a1", "leftValue": "={{ ['draft', 'needs_fix'].includes($json.status) }}", "rightValue": "",
+             "operator": {"type": "boolean", "operation": "true", "singleValue": True}},
+        ]),
+        {
+            "id": "b2e1d7aa-2222-4c4c-9a01-000000000004",
+            "name": "Take sheet row",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [780, -100],
+            "parameters": {"mode": "runOnceForAllItems", "language": "javaScript",
+                           "jsCode": "// The API returns a ready-made row for the 'Reel drafts' sheet.\n"
+                                     "return [{ json: $input.first().json.sheet_row }];"},
+        },
+        {
+            "id": "b2e1d7aa-2222-4c4c-9a01-000000000005",
+            "name": "Add to Reel drafts sheet",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [1040, -100],
+            "parameters": {
+                "operation": "append",
+                "documentId": {"__rl": True, "mode": "list", "value": ""},
+                "sheetName": {"__rl": True, "mode": "list", "value": ""},
+                "columns": {"mappingMode": "autoMapInputData", "value": {}},
+                "options": {"cellFormat": "RAW"},
+            },
+        },
+        {
+            "id": "b2e1d7aa-2222-4c4c-9a01-000000000006",
+            "name": "Tell the team",
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 2.3,
+            "position": [1300, -100],
+            "onError": "continueRegularOutput",
+            "parameters": {"authentication": "oAuth2", "select": "channel",
+                           "channelId": {"__rl": True, "mode": "list", "value": ""}, "text": REEL_SLACK, "otherOptions": {}},
+        },
+        {
+            "id": "b2e1d7aa-2222-4c4c-9a01-000000000007",
+            "name": "Report a problem",
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 2.3,
+            "position": [780, 120],
+            "onError": "continueRegularOutput",
+            "parameters": {"authentication": "oAuth2", "select": "channel",
+                           "channelId": {"__rl": True, "mode": "list", "value": ""},
+                           "text": "=:warning: No reel draft this time ({{ $json.status || 'error' }}): {{ $json.message || 'no reply from RELOOP' }}",
+                           "otherOptions": {}},
+        },
+    ],
+    "connections": {
+        "Mon and Thu 9am": {"main": [[link("Ask RELOOP for a reel draft")]]},
+        "Ask RELOOP for a reel draft": {"main": [[link("Draft made?")]]},
+        "Draft made?": {"main": [[link("Take sheet row")], [link("Report a problem")]]},
+        "Take sheet row": {"main": [[link("Add to Reel drafts sheet")]]},
+        "Add to Reel drafts sheet": {"main": [[link("Tell the team")]]},
+    },
+    "settings": {"executionOrder": "v1", "timezone": "Asia/Kolkata"},
+    "pinData": {},
+}
+out = ROOT / "n8n" / "reloop-reel-drafts.json"
+out.write_text(json.dumps(reel_workflow, indent=2) + "\n", encoding="utf-8")
+print(f"wrote {out.relative_to(ROOT)}")
