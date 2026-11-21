@@ -63,7 +63,9 @@
             "Conversation ID"
           ]
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       }
     },
     {

@@ -47,7 +47,7 @@ Save (and Publish if shown). Then check the agent's **Tools** list still shows a
 
 ## 3. n8n
 1. n8n → **Workflows** → **Create workflow** → **⋯** (top right) → **Import from file** → choose `n8n/reloop-voice-calls.json`.
-2. **Add row to Google Sheet** node: create a Google Sheets credential (sign in with Google), choose the **RELOOP voice calls** document and the sheet tab. Check "Column to match on" is **Conversation ID**.
+2. **Add row to Google Sheet** node: create a Google Sheets credential (sign in with Google), choose the **RELOOP voice calls** document and the sheet tab. Check "Column to match on" is **Conversation ID**, and under Options set **Cell Format** to **Use format from n8n (RAW)** so phone numbers starting with + don't show #ERROR!.
 3. **Email the team** node: create a Gmail credential and put the team's email address in **To**. (Or delete this node if you don't want emails.)
 4. **ElevenLabs post-call webhook** node: copy the **Production URL**.
 5. Keep n8n open. The secret comes in step 4.

@@ -73,3 +73,9 @@ def test_chain_runs_after_the_email():
     conn = json.loads(WORKFLOW.read_text(encoding="utf-8"))["connections"]
     assert conn["Needs follow-up?"]["main"][0] == [{"node": "Email the team", "type": "main", "index": 0}]
     assert conn["Email the team"]["main"][0][0]["node"] == "Slack alert"
+
+
+def test_sheet_stores_phone_as_text():
+    w = json.loads(WORKFLOW.read_text(encoding="utf-8"))
+    sheet = next(n for n in w["nodes"] if n["type"] == "n8n-nodes-base.googleSheets")
+    assert sheet["parameters"]["options"]["cellFormat"] == "RAW"  # "+91 ..." would otherwise become a formula error

@@ -171,7 +171,8 @@ workflow = {
                 "documentId": {"__rl": True, "mode": "list", "value": ""},
                 "sheetName": {"__rl": True, "mode": "list", "value": ""},
                 "columns": {"mappingMode": "autoMapInputData", "value": {}, "matchingColumns": ["Conversation ID"]},
-                "options": {},
+                # RAW: store text as-is, so "+91 98..." isn't read as a formula (#ERROR!).
+                "options": {"cellFormat": "RAW"},
             },
         },
         {
