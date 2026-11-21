@@ -5,6 +5,7 @@
       "name": "Slack alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
+      "onError": "continueRegularOutput",
       "position": [
         1040,
         100
@@ -177,6 +178,17 @@
     }
   ],
   "connections": {
+    "Slack alert": {
+      "main": [
+        [
+          {
+            "node": "Callback agreed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Callback agreed?": {
       "main": [
         [

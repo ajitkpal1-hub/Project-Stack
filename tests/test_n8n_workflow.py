@@ -66,3 +66,10 @@ def test_paste_in_snippet_matches_workflow():
     assert names == {"Slack alert", "Callback agreed?", "HubSpot: find contact by phone", "Already in HubSpot?",
                      "HubSpot: update contact", "HubSpot: create contact", "HubSpot: add call note"}
     assert all(n in w["nodes"] for n in snippet["nodes"])
+    assert snippet["connections"]["Slack alert"]["main"][0][0]["node"] == "Callback agreed?"
+
+
+def test_chain_runs_after_the_email():
+    conn = json.loads(WORKFLOW.read_text(encoding="utf-8"))["connections"]
+    assert conn["Needs follow-up?"]["main"][0] == [{"node": "Email the team", "type": "main", "index": 0}]
+    assert conn["Email the team"]["main"][0][0]["node"] == "Slack alert"

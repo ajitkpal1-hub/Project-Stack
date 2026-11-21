@@ -94,6 +94,7 @@ EXTRA_NODES = [
         "name": "Slack alert",
         "type": "n8n-nodes-base.slack",
         "typeVersion": 2.3,
+        "onError": "continueRegularOutput",
         "position": [1040, 100],
         "parameters": {
             "authentication": "oAuth2",
@@ -213,7 +214,9 @@ workflow = {
         "ElevenLabs post-call webhook": {"main": [[{"node": "Check signature + build row", "type": "main", "index": 0}]]},
         "Check signature + build row": {"main": [[{"node": "Add row to Google Sheet", "type": "main", "index": 0}]]},
         "Add row to Google Sheet": {"main": [[{"node": "Needs follow-up?", "type": "main", "index": 0}]]},
-        "Needs follow-up?": {"main": [[link("Email the team"), link("Slack alert"), link("Callback agreed?")], []]},
+        "Needs follow-up?": {"main": [[link("Email the team")], []]},
+        "Email the team": {"main": [[link("Slack alert")]]},
+        "Slack alert": {"main": [[link("Callback agreed?")]]},
         "Callback agreed?": {"main": [[link("HubSpot: find contact by phone")], []]},
         "HubSpot: find contact by phone": {"main": [[link("Already in HubSpot?")]]},
         "Already in HubSpot?": {"main": [[link("HubSpot: update contact")], [link("HubSpot: create contact")]]},

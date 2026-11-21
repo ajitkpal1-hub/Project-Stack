@@ -71,8 +71,9 @@ creates their HubSpot contact (matched on phone number) and adds a note with the
 - **HubSpot only gets callers who agreed** to be contacted. Others never reach it.
 
 Add to an existing workflow (keeps its secret and logins): open `n8n/add-slack-hubspot-nodes.json`, copy everything,
-click on the n8n canvas and paste (Ctrl+V). Then drag two lines from the **true** output of **Needs follow-up?**: one to
-**Slack alert**, one to **Callback agreed?**. (A fresh import of `n8n/reloop-voice-calls.json` already has them joined.)
+click on the n8n canvas and paste (Ctrl+V). Then drag one line from the output of **Email the team** to **Slack alert**
+(Slack → HubSpot is already joined). A fresh import of `n8n/reloop-voice-calls.json` has everything joined.
+Tip: in **Email the team** → Settings → On Error, choose **Continue** so an email problem doesn't stop Slack and HubSpot.
 
 **Slack:** open **Slack alert** → Credential → create new → sign in with Slack and allow → pick the channel
 (e.g. `#reloop-follow-ups`). Invite the n8n app to that channel if Slack asks.
