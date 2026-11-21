@@ -29,7 +29,7 @@ in about a minute. The Python version is pinned in `.python-version`; dependenci
 Changing a variable only takes effect on the next deploy: push, or Deployments → ⋯ → Redeploy.
 
 ## Supabase setup (once per project)
-1. Run `supabase/migrations/0001` … `0005` in order in the SQL editor.
+1. Run `supabase/migrations/0001` … `0006` in order in the SQL editor (0006: reporting views, see [DASHBOARD.md](DASHBOARD.md)).
 2. Authentication → Email: "Confirm email" off until an email sender (e.g. Resend) is configured.
 3. Load documents: `scripts/ingest.py` from a machine with the keys in `.env`.
 

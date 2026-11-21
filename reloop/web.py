@@ -15,6 +15,7 @@ from reloop.models.dashboards import FLAG_REASON_LABELS
 from reloop.routes import account, assistant, centres, dashboards, donations, internal, pages, scan, talk, voice
 from reloop.routes.deps import LoginRequired, login_url, viewer
 from reloop.security import SessionMiddleware, csrf_field, take_flash
+from reloop.services.usage import AREAS
 from reloop.templating import templates
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
         current_viewer=viewer,
         take_flash=take_flash,
         flag_reason_labels=FLAG_REASON_LABELS,
+        area_choices=AREAS,
     )
     app.add_middleware(SessionMiddleware)
     app.include_router(account.router)

@@ -186,7 +186,7 @@
         {% elif demo_mode and not result %}
         <p class="notice notice--demo">{{ icon('alert', 18) }} {{ _('Demo mode: answers are samples, not real AI analysis.') }}</p>
         {% endif %}
-        {{ chute(_('Identify this item'), show_note=true, disabled=not ai_ready) }}
+        {{ chute(_('Identify this item'), show_note=true, disabled=not ai_ready, show_area=true, chosen_area=chosen_area or '') }}
         <p class="fineprint">{{ _('Up to %(mb)s MB. Your photo is analysed and then discarded. We do not store it.', mb=max_mb) }}</p>
       </div>
       {% if not result %}

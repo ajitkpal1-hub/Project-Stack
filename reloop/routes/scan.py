@@ -6,7 +6,7 @@ Nothing is stored yet (history arrives with accounts in Phase 6).
 
 import logging
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse
 from pydantic import ValidationError
 
@@ -16,9 +16,10 @@ from reloop.agents.pipeline import WastePipeline
 from reloop.models.classification import CONDITION_LABELS, Certainty, Condition
 from reloop.models.pipeline import DonationStatus, PipelineResult, StepStatus
 from reloop.rag.answer import get_assistant
-from reloop.routes.deps import partner_repo, rate_limiter
+from reloop.routes.deps import partner_repo, rate_limiter, record_usage
 from reloop.services.partners import DirectoryPartners
 from reloop.services.classifier import Classifier, ClassifierUnavailable, get_classifier
+from reloop.services.usage import clean_area
 from reloop.templating import templates
 from reloop.utils.images import MAX_UPLOAD_BYTES, ImageValidationError, prepare_image
 
@@ -72,9 +73,11 @@ def scan_page(request: Request) -> HTMLResponse:
 @router.post("/scan", response_class=HTMLResponse)
 async def scan_submit(
     request: Request,
+    background: BackgroundTasks,
     photo: UploadFile | None = File(None),
     camera: UploadFile | None = File(None),
     note: str = Form(""),
+    area: str = Form(""),
 ) -> HTMLResponse:
     classifier = _classifier()
     if classifier is None:
@@ -101,7 +104,9 @@ async def scan_submit(
 
     log.info("scan category=%s certainty=%s action=%s demo=%s", outcome.scan.primary_category, outcome.scan.certainty,
              outcome.scan.recommended_action, outcome.scan.demo)
-    return _render(request, result=outcome.scan, pipeline=outcome)
+    if not outcome.scan.demo:  # demo answers aren't real usage
+        background.add_task(record_usage, "web_scan", outcome.scan.primary_category, clean_area(area))
+    return _render(request, result=outcome.scan, pipeline=outcome, chosen_area=clean_area(area).replace("not_given", ""))
 
 
 @router.post("/scan/condition", response_class=HTMLResponse)

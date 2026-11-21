@@ -103,6 +103,26 @@ def rate_limiter():
     return RateLimiter(SupabaseCounter(client, _MEMORY_COUNTER) if client else _MEMORY_COUNTER, pepper)
 
 
+_usage_override = None
+
+
+def usage_recorder():
+    """Anonymous usage counts (migration 0006), or None when Supabase isn't configured."""
+    from reloop.services.usage import SupabaseUsage
+
+    if _usage_override is not None:
+        return _usage_override
+    client = _client()
+    return SupabaseUsage(client) if client else None
+
+
+def record_usage(channel: str, lane, area: str = "not_given") -> None:
+    """Run as a background task, after the response is sent."""
+    recorder = usage_recorder()
+    if recorder is not None:
+        recorder.record(channel, lane, area)
+
+
 _dash_repo_override = None
 
 

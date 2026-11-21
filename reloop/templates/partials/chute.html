@@ -1,12 +1,21 @@
 {% from "partials/icons.html" import icon %}
 {# The chute: take a photo with the camera or upload one. With /js/scan.js the scan starts as soon
    as a photo is chosen and shows a "Scanning" state; without it, the Identify button submits. #}
-{% macro chute(button_label, show_donate=false, show_note=false, disabled=false, show_talk=false) -%}
+{% macro chute(button_label, show_donate=false, show_note=false, disabled=false, show_talk=false, show_area=false, chosen_area='') -%}
 <form class="chute" action="/scan" method="post" enctype="multipart/form-data" data-autosubmit data-loading="scan">
   {% if show_note %}
   <label class="chute-note">
     <span>{{ _('Anything we should know? (optional, add it before the photo)') }}</span>
     <input type="text" name="note" maxlength="300" autocomplete="off" placeholder="{{ _('e.g. it has a battery inside, or it is a medicine strip') }}">
+  </label>
+  {% endif %}
+  {% if show_area %}
+  <label class="chute-note">
+    <span>{{ _('Your area (optional, helps us plan collection drives)') }}</span>
+    <select name="area">
+      <option value="">{{ _('Prefer not to say') }}</option>
+      {% for key, label in area_choices.items() %}<option value="{{ key }}" {% if chosen_area == key %}selected{% endif %}>{{ _(label) }}</option>{% endfor %}
+    </select>
   </label>
   {% endif %}
   <div class="chute-slot">

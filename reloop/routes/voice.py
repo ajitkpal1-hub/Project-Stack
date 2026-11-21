@@ -19,7 +19,7 @@ import hmac
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -31,7 +31,7 @@ from reloop.models.knowledge import Answer, AnswerMode
 from reloop.models.partners import KIND_LABELS
 from reloop.models.pipeline import DonationStatus, PipelineResult
 from reloop.rag.answer import KnowledgeAssistant, get_assistant
-from reloop.routes.deps import partner_repo, partner_service, rate_limiter
+from reloop.routes.deps import partner_repo, partner_service, rate_limiter, record_usage
 from reloop.services.classifier import Classifier, ClassifierUnavailable, get_classifier
 from reloop.services.guardrails import item_unclear
 from reloop.services.partners import DirectoryPartners
@@ -244,7 +244,7 @@ def _classify_say(result: PipelineResult) -> tuple[str, list[str]]:
 
 
 @router.post("/classify")
-async def voice_classify(request: Request) -> JSONResponse:
+async def voice_classify(request: Request, background: BackgroundTasks) -> JSONResponse:
     if (refusal := _authorised(request)) is not None:
         return refusal
     parsed = await _parse(request, ClassifyIn)
@@ -270,6 +270,8 @@ async def voice_classify(request: Request) -> JSONResponse:
     log.info("voice classify category=%s certainty=%s action=%s donation=%s demo=%s", scan.primary_category,
              scan.certainty, scan.recommended_action, result.donation.status if result.donation else None, scan.demo)
     knowledge = result.knowledge
+    if not scan.demo:
+        background.add_task(record_usage, "voice", scan.primary_category, "not_given")
     return _reply(
         200, "needs_more_detail" if item_unclear(scan) else "ok", say,
         demo=scan.demo,
