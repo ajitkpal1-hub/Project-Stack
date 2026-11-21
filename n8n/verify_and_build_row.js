@@ -64,7 +64,17 @@ const yes = (key) => {
   return v === true || String(v).toLowerCase() === 'true' ? 'Yes' : 'No';
 };
 
-// Privacy: remove phone numbers and email addresses if a caller said them anyway. PIN codes (6 digits) stay.
+// Contact details are kept only when the caller agreed to a callback, and only in their own columns.
+const consent = yes('contact_consent');
+const cleanPhone = (v) => {
+  const digits = String(v || '').replace(/[^\d+]/g, '');
+  const local = digits.replace(/^(\+?91)/, '');
+  return /^[6-9]\d{9}$/.test(local) ? '+91 ' + local : (digits.length >= 8 ? digits : '');
+};
+const callerName = consent === 'Yes' ? String(pick('caller_name') || pick('customer_name') || '').slice(0, 60) : '';
+const callerPhone = consent === 'Yes' ? cleanPhone(pick('caller_phone')) : '';
+
+// Privacy: the summary and other text columns never carry phone numbers or emails (PIN codes, 6 digits, stay).
 const scrub = (text) => String(text || '')
   .replace(/(\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}/g, '[number removed]')
   .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[email removed]')
@@ -87,6 +97,9 @@ return [{
     'Locality or PIN': scrub(pick('locality')),
     'Unanswered question': scrub(pick('unanswered_question')),
     'Summary': scrub(analysis.transcript_summary),
-    'Needs follow-up': donationLead === 'Yes' || safetyConcern === 'Yes' ? 'Yes' : 'No',
+    'Needs follow-up': donationLead === 'Yes' || safetyConcern === 'Yes' || callerPhone ? 'Yes' : 'No',
+    'Name': callerName,
+    'Phone': callerPhone,
+    'Contact consent': consent,
   },
 }];

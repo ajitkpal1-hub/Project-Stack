@@ -11,8 +11,10 @@ Call ends ──▶ ElevenLabs post-call webhook (signed) ──▶ n8n
 ```
 
 **What is stored:** time, duration, item, lane, donation lead (yes/no), safety concern (yes/no), locality or PIN,
-any question the helper couldn't answer, and ElevenLabs' short summary. **Never** the full transcript or audio.
-Phone numbers and email addresses are removed if a caller says them anyway. Share the sheet only with the team.
+any question the helper couldn't answer, ElevenLabs' short summary, and, **only when the caller agreed to a callback**,
+their first name and phone number. **Never** the full transcript or audio. Phone numbers and emails are scrubbed from the
+summary and other text columns, so a number appears only in the Phone column, and only with consent.
+The sheet holds personal data (India's DPDP Act 2023): share it only with the team, and delete rows once followed up.
 
 Files: `n8n/reloop-voice-calls.json` (import this), `n8n/verify_and_build_row.js` (the checking code, for reading).
 After editing the JS, run `.venv/Scripts/python scripts/build_n8n_workflow.py` to rebuild the JSON.
@@ -20,9 +22,9 @@ After editing the JS, run `.venv/Scripts/python scripts/build_n8n_workflow.py` t
 ## 1. Google Sheet
 Create a sheet named **RELOOP voice calls**. In row 1, type these headers exactly, one per column (A to L):
 
-| A | B | C | D | E | F | G | H | I | J | K | L |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Call time (IST) | Conversation ID | Duration (seconds) | Call result | Item | Lane | Donation lead | Safety concern | Locality or PIN | Unanswered question | Summary | Needs follow-up |
+| A | B | C | D | E | F | G | H | I | J | K | L | M | N | O |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Call time (IST) | Conversation ID | Duration (seconds) | Call result | Item | Lane | Donation lead | Safety concern | Locality or PIN | Unanswered question | Summary | Needs follow-up | Name | Phone | Contact consent |
 
 ## 2. Data collection in ElevenLabs
 Agent → **Analysis** tab → **Data collection** → **Add data collection**, once per row:
@@ -35,6 +37,11 @@ Agent → **Analysis** tab → **Data collection** → **Add data collection**, 
 | `safety_concern` | boolean | True if the caller asked about hazardous or medical waste (batteries, chemicals, medicines, sharps) or described an emergency. |
 | `locality` | string | The locality or 6-digit PIN code the caller mentioned. Never a name, phone number or full address. Empty if none. |
 | `unanswered_question` | string | A question the helper couldn't answer because RELOOP's documents or directory didn't cover it. Empty if everything was answered. |
+| `contact_consent` | boolean | True only if the caller clearly agreed to be contacted by the RELOOP team about this request. |
+| `caller_name` | string | The caller's first name, only if they agreed to a callback. Empty otherwise. |
+| `caller_phone` | string | The caller's phone number, only if they agreed to a callback. Digits only, e.g. 9876543210. Empty otherwise. |
+
+Remove template items that collect other personal details (and the "Callback Details Collected" criterion if you don't use it).
 
 Save (and Publish if shown). Then check the agent's **Tools** list still shows all three tools.
 

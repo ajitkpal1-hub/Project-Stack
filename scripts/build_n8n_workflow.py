@@ -17,6 +17,7 @@ Item: {{ $json['Item'] }}  (lane: {{ $json['Lane'] }})
 Donation lead: {{ $json['Donation lead'] }}
 Safety concern: {{ $json['Safety concern'] }}
 Locality or PIN: {{ $json['Locality or PIN'] }}
+Callback: {{ $json['Contact consent'] === 'Yes' ? $json['Name'] + ', ' + $json['Phone'] : 'not requested' }}
 
 Summary: {{ $json['Summary'] }}
 

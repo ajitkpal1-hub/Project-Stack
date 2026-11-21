@@ -31,3 +31,10 @@ def test_sheet_row_never_includes_transcript():
     code = SCRIPT.read_text(encoding="utf-8")
     assert "data.transcript" not in code  # only the summary and collected fields, never the full transcript
     assert "[number removed]" in code and "[email removed]" in code
+
+
+def test_contact_details_only_with_consent():
+    code = SCRIPT.read_text(encoding="utf-8")
+    assert "const callerName = consent === 'Yes'" in code
+    assert "const callerPhone = consent === 'Yes'" in code
+    assert "'Phone': callerPhone" in code and "'Contact consent': consent" in code
